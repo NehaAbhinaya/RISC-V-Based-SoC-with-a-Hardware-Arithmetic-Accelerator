@@ -1,0 +1,192 @@
+Command: /home/student/Downloads/Honours project/Project/SOC_UVM/sim/./simv_soc_uvm +UVM_TESTNAME=uart_connectivity_test -l soc_uart_run.log
+Chronologic VCS simulator copyright 1991-2023
+Contains Synopsys proprietary information.
+Compiler version U-2023.03_Full64; Runtime version U-2023.03_Full64;  Nov  7 16:31 2026
+----------------------------------------------------------------
+UVM-1.1d.Synopsys
+(C) 2007-2013 Mentor Graphics Corporation
+(C) 2007-2013 Cadence Design Systems, Inc.
+(C) 2006-2013 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_NO_DEPRECATED undefined.
+  See http://www.eda.org/svdb/view.php?id=3313 for more details.
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_OBJECT_MUST_HAVE_CONSTRUCTOR undefined.
+  See http://www.eda.org/svdb/view.php?id=3770 for more details.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+[IMEM] Loading simulation firmware from: soc_firmware.hex
+UVM_INFO @ 0: reporter [RNTST] Running test uart_connectivity_test...
+UVM_INFO ../soc_uvm/soc_test.sv(26) @ 0: uvm_test_top [uart_connectivity_test] === [BUILD PHASE] Starting soc_test Build Phase ===
+UVM_INFO ../soc_uvm/soc_test.sv(45) @ 0: uvm_test_top [uart_connectivity_test] === [BUILD PHASE] soc_test Build Phase Complete ===
+UVM_INFO ../soc_uvm/soc_env.sv(49) @ 0: uvm_test_top.env [soc_env] === [BUILD PHASE] Starting SoC UVM Environment Construction ===
+UVM_INFO ../soc_uvm/soc_env.sv(85) @ 0: uvm_test_top.env [soc_env] === [BUILD PHASE] All 6 VIP Agents and Virtual Sequencer successfully instantiated ===
+UVM_INFO ../soc_uvm/soc_env.sv(94) @ 0: uvm_test_top.env [soc_env] === [CONNECT PHASE] Connecting VIP Sequencers to Virtual Sequencer ===
+UVM_INFO ../soc_uvm/soc_env.sv(106) @ 0: uvm_test_top.env [soc_env] === [CONNECT PHASE] Virtual Sequencer connected to all 6 VIP sequencers ===
+UVM_INFO ../soc_uvm/soc_env.sv(114) @ 0: uvm_test_top.env [soc_env] === [END OF ELABORATION] SoC UVM Environment structural hierarchy complete ===
+UVM_INFO ../soc_uvm/soc_test.sv(50) @ 0: uvm_test_top [uart_connectivity_test] === [TOPOLOGY] Printing SoC UVM Component Hierarchy ===
+UVM_INFO @ 0: reporter [UVMTOP] UVM testbench topology:
+------------------------------------------------------------------------
+Name                       Type                              Size  Value
+------------------------------------------------------------------------
+uvm_test_top               uart_connectivity_test            -     @494 
+  env                      soc_env                           -     @513 
+    accel_agnt             arithmetic_accelerator_agent      -     @588 
+      drv                  arithmetic_accelerator_driver     -     @731 
+        rsp_port           uvm_analysis_port                 -     @748 
+        seq_item_port      uvm_seq_item_pull_port            -     @739 
+      mon                  arithmetic_accelerator_monitor    -     @757 
+        ap                 uvm_analysis_port                 -     @765 
+      seqr                 arithmetic_accelerator_sequencer  -     @774 
+        rsp_export         uvm_analysis_export               -     @782 
+        seq_item_export    uvm_seq_item_pull_imp             -     @888 
+        arbitration_queue  array                             0     -    
+        lock_queue         array                             0     -    
+        num_last_reqs      integral                          32    'd1  
+        num_last_rsps      integral                          32    'd1  
+    dma_agnt               dma_agent                         -     @596 
+      drv                  dma_driver                        -     @908 
+        rsp_port           uvm_analysis_port                 -     @925 
+        seq_item_port      uvm_seq_item_pull_port            -     @916 
+      mon                  dma_monitor                       -     @934 
+        ap                 uvm_analysis_port                 -     @942 
+      seqr                 dma_sequencer                     -     @951 
+        rsp_export         uvm_analysis_export               -     @959 
+        seq_item_export    uvm_seq_item_pull_imp             -     @1065
+        arbitration_queue  array                             0     -    
+        lock_queue         array                             0     -    
+        num_last_reqs      integral                          32    'd1  
+        num_last_rsps      integral                          32    'd1  
+    gpio_agnt              gpio_agent                        -     @564 
+      drv                  gpio_driver                       -     @1085
+        rsp_port           uvm_analysis_port                 -     @1102
+        seq_item_port      uvm_seq_item_pull_port            -     @1093
+      mon                  gpio_monitor                      -     @1111
+        ap                 uvm_analysis_port                 -     @1119
+      seqr                 gpio_sequencer                    -     @1128
+        rsp_export         uvm_analysis_export               -     @1136
+        seq_item_export    uvm_seq_item_pull_imp             -     @1242
+        arbitration_queue  array                             0     -    
+        lock_queue         array                             0     -    
+        num_last_reqs      integral                          32    'd1  
+        num_last_rsps      integral                          32    'd1  
+    spi_agnt               spi_agent                         -     @572 
+      drv                  spi_driver                        -     @1262
+        rsp_port           uvm_analysis_port                 -     @1279
+        seq_item_port      uvm_seq_item_pull_port            -     @1270
+      mon                  spi_monitor                       -     @1288
+        ap                 uvm_analysis_port                 -     @1296
+      seqr                 spi_sequencer                     -     @1305
+        rsp_export         uvm_analysis_export               -     @1313
+        seq_item_export    uvm_seq_item_pull_imp             -     @1419
+        arbitration_queue  array                             0     -    
+        lock_queue         array                             0     -    
+        num_last_reqs      integral                          32    'd1  
+        num_last_rsps      integral                          32    'd1  
+    timer_agnt             timer_agent                       -     @580 
+      drv                  timer_driver                      -     @1439
+        rsp_port           uvm_analysis_port                 -     @1456
+        seq_item_port      uvm_seq_item_pull_port            -     @1447
+      mon                  timer_monitor                     -     @1465
+        ap                 uvm_analysis_port                 -     @1473
+      seqr                 timer_sequencer                   -     @1482
+        rsp_export         uvm_analysis_export               -     @1490
+        seq_item_export    uvm_seq_item_pull_imp             -     @1596
+        arbitration_queue  array                             0     -    
+        lock_queue         array                             0     -    
+        num_last_reqs      integral                          32    'd1  
+        num_last_rsps      integral                          32    'd1  
+    uart_agnt              uart_agent                        -     @539 
+      drv                  uart_driver                       -     @1616
+        rsp_port           uvm_analysis_port                 -     @1633
+        seq_item_port      uvm_seq_item_pull_port            -     @1624
+      mon                  uart_monitor                      -     @1642
+        ap                 uvm_analysis_port                 -     @1650
+      seqr                 uart_sequencer                    -     @1659
+        rsp_export         uvm_analysis_export               -     @1667
+        seq_item_export    uvm_seq_item_pull_imp             -     @1773
+        arbitration_queue  array                             0     -    
+        lock_queue         array                             0     -    
+        num_last_reqs      integral                          32    'd1  
+        num_last_rsps      integral                          32    'd1  
+    uart_sb                uart_scoreboard                   -     @547 
+      mon_export           uvm_analysis_imp                  -     @555 
+    v_seqr                 soc_virtual_sequencer             -     @604 
+      rsp_export           uvm_analysis_export               -     @612 
+      seq_item_export      uvm_seq_item_pull_imp             -     @718 
+      arbitration_queue    array                             0     -    
+      lock_queue           array                             0     -    
+      num_last_reqs        integral                          32    'd1  
+      num_last_rsps        integral                          32    'd1  
+------------------------------------------------------------------------
+
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(32) @ 0: uvm_test_top [uart_connectivity_test] =======================================================================
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(33) @ 0: uvm_test_top [uart_connectivity_test]   PHASE 2: UART END-TO-END FUNCTIONAL RECEPTION VERIFICATION
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(34) @ 0: uvm_test_top [uart_connectivity_test]   Target Transaction: Expected Data = 8'hA5, 8-N-1 Format
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(35) @ 0: uvm_test_top [uart_connectivity_test]   Baud Timing       : 16 clock cycles/bit (160 ns/bit @ 100 MHz)
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(36) @ 0: uvm_test_top [uart_connectivity_test]   SoC DUT Instance  : soc_dut (Module: soc_top)
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(37) @ 0: uvm_test_top [uart_connectivity_test] =======================================================================
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(46) @ 300000: uvm_test_top [uart_connectivity_test] =======================================================================
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(47) @ 300000: uvm_test_top [uart_connectivity_test]   PHASE 2: SYNCHRONIZED UART TRANSMISSION & RECEPTION VERIFICATION
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(48) @ 300000: uvm_test_top [uart_connectivity_test]   1. Enabling Hardware Loopback (uart_tx directly drives uart_rx)
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(49) @ 300000: uvm_test_top [uart_connectivity_test]   2. Writing byte 8'hA5 to UART_TXDATA (0x4000_0008)
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(50) @ 300000: uvm_test_top [uart_connectivity_test]   3. DUT UART TX transmits serial waveform (soc_dut.uart_tx toggles)
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(51) @ 300000: uvm_test_top [uart_connectivity_test]   4. DUT UART RX receives the exact transmitted serial frame
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(52) @ 300000: uvm_test_top [uart_connectivity_test]   5. DUT Hardware RX FIFO latches 8'hA5 and asserts rx_valid
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(53) @ 300000: uvm_test_top [uart_connectivity_test] =======================================================================
+UVM_INFO ../../testbench/vips/uart_vip/uart_scoreboard.sv(49) @ 300000: uvm_test_top.env.uart_sb [UART_SB] Registered Expected UART RX byte: 0xa5
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(67) @ 305000: uvm_test_top [uart_connectivity_test] Triggering DUT UART TX transmission of byte 8'hA5...
+UVM_INFO ../../testbench/vips/uart_vip/uart_monitor.sv(68) @ 505000: uvm_test_top.env.uart_agnt.mon [UART_MON_RX] === [UART_MON_RX] Start bit detected on uart_rx at 505000 ps (Divisor=16) ===
+UVM_INFO ../../testbench/vips/uart_vip/uart_scoreboard.sv(93) @ 1935000: uvm_test_top.env.uart_sb [UART_SB] === [UART_SB] Monitored DUT TX frame on uart_tx: 0xa5 at 1935000 ps (Stop bit valid) ===
+UVM_INFO ../../testbench/vips/uart_vip/uart_monitor.sv(92) @ 1945000: uvm_test_top.env.uart_agnt.mon [UART_MON_RX] === [UART_MON_RX] Successfully decoded RX frame: 0xa5 at 1945000 ps (Stop bit valid) ===
+UVM_INFO ../../testbench/vips/uart_vip/uart_scoreboard.sv(62) @ 1945000: uvm_test_top.env.uart_sb [UART_SB] Processing Monitored RX transaction: 0xa5 at 1945000 ps
+UVM_INFO ../../testbench/vips/uart_vip/uart_scoreboard.sv(80) @ 1945000: uvm_test_top.env.uart_sb [UART_SB]   [CHECK 1 - PASS] Sequence-to-Monitor Match: Expected=0xa5, Monitored=0xa5
+UVM_INFO ../../testbench/vips/uart_vip/uart_scoreboard.sv(127) @ 2005000: uvm_test_top.env.uart_sb [UART_SB] =======================================================================
+UVM_INFO ../../testbench/vips/uart_vip/uart_scoreboard.sv(128) @ 2005000: uvm_test_top.env.uart_sb [UART_SB]   [CHECK 2 - PASS] ACTUAL DUT-SIDE UART RECEPTION CONFIRMED!
+UVM_INFO ../../testbench/vips/uart_vip/uart_scoreboard.sv(129) @ 2005000: uvm_test_top.env.uart_sb [UART_SB]   DUT UART Peripheral Instance : soc_dut.u_uart.u_axi_uart_top
+UVM_INFO ../../testbench/vips/uart_vip/uart_scoreboard.sv(130) @ 2005000: uvm_test_top.env.uart_sb [UART_SB]   DUT RX FIFO Received Data    : 0xa5 (Expected: 0xa5)
+UVM_INFO ../../testbench/vips/uart_vip/uart_scoreboard.sv(131) @ 2005000: uvm_test_top.env.uart_sb [UART_SB]   DUT RX Valid Status Flag     : 1
+UVM_INFO ../../testbench/vips/uart_vip/uart_scoreboard.sv(132) @ 2005000: uvm_test_top.env.uart_sb [UART_SB]   DUT Hardware Baud Divisor    : 16 cycles/bit
+UVM_INFO ../../testbench/vips/uart_vip/uart_scoreboard.sv(133) @ 2005000: uvm_test_top.env.uart_sb [UART_SB] =======================================================================
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(85) @ 3305000: uvm_test_top [uart_connectivity_test] =======================================================================
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(86) @ 3305000: uvm_test_top [uart_connectivity_test]   [TEST PASS] SYNCHRONIZED UART TX->RX VERIFICATION SUCCESSFUL!
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(87) @ 3305000: uvm_test_top [uart_connectivity_test]   - DUT UART transmitter serialized 8'hA5 onto soc_dut.uart_tx (TX toggled)
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(88) @ 3305000: uvm_test_top [uart_connectivity_test]   - soc_dut.uart_rx received the transmitted serial data (RX toggled)
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(89) @ 3305000: uvm_test_top [uart_connectivity_test]   - soc_dut.u_uart.u_axi_uart_top successfully received 8'hA5 in RX FIFO
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(90) @ 3305000: uvm_test_top [uart_connectivity_test]   - Hardware RX FIFO and status flag rx_valid confirmed
+UVM_INFO ../soc_uvm/uart_connectivity_test.sv(91) @ 3305000: uvm_test_top [uart_connectivity_test] =======================================================================
+UVM_INFO /home/student/snps_tools_target/vcs/U-2023.03/etc/uvm/base/uvm_objection.svh(1274) @ 3305000: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+UVM_INFO ../../testbench/vips/uart_vip/uart_scoreboard.sv(143) @ 3305000: uvm_test_top.env.uart_sb [UART_SB] === [UART_SB] Final Scoreboard Summary ===
+UVM_INFO ../../testbench/vips/uart_vip/uart_scoreboard.sv(144) @ 3305000: uvm_test_top.env.uart_sb [UART_SB]   Matches                   : 1
+UVM_INFO ../../testbench/vips/uart_vip/uart_scoreboard.sv(145) @ 3305000: uvm_test_top.env.uart_sb [UART_SB]   Mismatches                : 0
+UVM_INFO ../../testbench/vips/uart_vip/uart_scoreboard.sv(146) @ 3305000: uvm_test_top.env.uart_sb [UART_SB]   DUT-Side Hardware Verified: 1
+UVM_INFO ../../testbench/vips/uart_vip/uart_scoreboard.sv(153) @ 3305000: uvm_test_top.env.uart_sb [UART_SB] All UART transactions and DUT-side reception verified successfully with 0 errors.
+
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO :   51
+UVM_WARNING :    0
+UVM_ERROR :    0
+UVM_FATAL :    0
+** Report counts by id
+[RNTST]     1
+[TEST_DONE]     1
+[UART_MON_RX]     2
+[UART_SB]    16
+[UVMTOP]     1
+[soc_env]     5
+[uart_connectivity_test]    25
+$finish called from file "/home/student/snps_tools_target/vcs/U-2023.03/etc/uvm/base/uvm_root.svh", line 437.
+$finish at simulation time              3305000
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 3305000 ps
+CPU Time:      0.200 seconds;       Data structure size:   7.1Mb
+Sat Nov  7 16:31:28 2026

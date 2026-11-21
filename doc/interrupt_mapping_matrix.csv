@@ -1,0 +1,8 @@
+PIC Source ID,Peripheral IP,IP Interrupt Signal,PIC Port Bit,Trigger Condition,Clear Mechanism,Relevant Testcase
+Source 1,Arithmetic Accelerator,irq_acc,pic_interrupts[0] / extintsrc_req[1],Vector offload complete or divide-by-zero error,Clear via ACC_CTRL soft reset / new job,"TC-09, TC-12"
+Source 2,DMA Controller,irq_dma,pic_interrupts[1] / extintsrc_req[2],Job complete (all results written) or interconnect bus error,Clear via DMA_CTRL start/abort write,"TC-10, TC-11, TC-12, TC-14"
+Source 3,SPI Master Controller,irq_spi,pic_interrupts[2] / extintsrc_req[3],"TX FIFO empty, RX FIFO full, or transfer complete",Clear via SPI_ISR status register write,"TC-08, TC-12"
+Source 4,UART Controller,irq_uart,pic_interrupts[3] / extintsrc_req[4],RX FIFO not empty (valid byte) or TX FIFO ready,Clear on reading UART_RXDATA / writing UART_TXDATA,"TC-05, TC-12"
+Source 5,System Timer,irq_timer,pic_interrupts[4] / extintsrc_req[5],32-bit counter reaches programmed TIMER_COMPARE value,Write-1-to-Clear (W1C) on TIMER_STATUS[0],"TC-06, TC-12"
+Source 6,GPIO Controller,irq_gpio,pic_interrupts[5] / extintsrc_req[6],Configured rising/falling edge on any enabled gpio_in pin,Write-1-to-Clear (W1C) on GPIO_INT_STATUS,"TC-07, TC-12"
+Composite,VeeR PIC Gateway,irq_core,Core MEIP (Machine External Interrupt),Priority-resolved active interrupt pending in PIC,VeeR core branches to mtvec vector table,"TC-01, TC-12, TC-14"

@@ -1,0 +1,198 @@
+Command: /home/student/Downloads/Honours project/Project/testbench/top_tb/./simv_vip_smoke -l vip_smoke_run.log
+Chronologic VCS simulator copyright 1991-2023
+Contains Synopsys proprietary information.
+Compiler version U-2023.03_Full64; Runtime version U-2023.03_Full64;  Nov  7 14:49 2026
+----------------------------------------------------------------
+UVM-1.1d.Synopsys
+(C) 2007-2013 Mentor Graphics Corporation
+(C) 2007-2013 Cadence Design Systems, Inc.
+(C) 2006-2013 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_NO_DEPRECATED undefined.
+  See http://www.eda.org/svdb/view.php?id=3313 for more details.
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_OBJECT_MUST_HAVE_CONSTRUCTOR undefined.
+  See http://www.eda.org/svdb/view.php?id=3770 for more details.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+[IMEM] Loading simulation firmware from: soc_firmware.hex
+============================================================================
+  STARTING SOC-LEVEL VIP INTEGRATION SMOKE TEST
+  Architecture: RISC-V VeeR EL2 SoC with Hardware Arithmetic Accelerator
+  VIPs Under Test: UART, GPIO, SPI, Timer, Accelerator, DMA (6 VIPs)
+============================================================================
+
+[TEST 1] SoC Controlled Reset Sequence & Initial Output Defaults...
+UVM_INFO @ 0: reporter [RNTST] Running test soc_vip_smoke_test...
+UVM_INFO tb_vip_smoke_top.sv(359) @ 0: uvm_test_top [UVM_VIP_SMOKE] ==================================================
+UVM_INFO tb_vip_smoke_top.sv(360) @ 0: uvm_test_top [UVM_VIP_SMOKE] Building all Six VIP Environments in UVM Hierarchy
+UVM_INFO tb_vip_smoke_top.sv(361) @ 0: uvm_test_top [UVM_VIP_SMOKE] ==================================================
+UVM_INFO tb_vip_smoke_top.sv(372) @ 0: uvm_test_top [UVM_VIP_SMOKE] All Six VIPs entered UVM run_phase successfully.
+  PASS: uart_tx idle state verified (1'b1)
+  PASS: spi_cs_n idle state verified (1'b1)
+  PASS: spi_sclk idle state verified (1'b0)
+  PASS: gpio_out reset state verified (8'h00)
+  PASS: pic_interrupts reset state verified (6'b000000)
+  PASS: irq_core reset state verified (1'b0)
+
+[TEST 2] UART VIP Integration Smoke Test (Base 0x4000_0000)...
+  PASS: UART_STATUS read OK (tx_ready = 1)
+  PASS: UART_CTRL configured with divisor=8, enable=1
+  PASS: Transmitted test byte 0xA5 to UART_TXDATA
+UVM_INFO ../vips/uart_vip/uart_monitor.sv(65) @ 1305000: uvm_test_top.uart_e.agent.mon [UART_MON] Monitored UART TX frame: 0xa5 ('.')
+UVM_INFO ../vips/uart_vip/uart_scoreboard.sv(45) @ 1305000: uvm_test_top.uart_e.sb [UART_SB] [SCOREBOARD MATCH] Monitored UART TX byte 0xa5 matches standard test pattern 0xA5
+  PASS: UART_STATUS indicates rx_valid = 1 after loopback
+  PASS: UART received byte 0xa5 perfectly matches transmitted 0xA5
+
+[TEST 3] GPIO VIP Integration Smoke Test (Base 0x4000_2000)...
+UVM_INFO ../vips/gpio_vip/gpio_monitor.sv(48) @ 3775000: uvm_test_top.gpio_e.agent.mon [GPIO_MON] Monitored GPIO state change: in=0x5a, out=0x00, irq_gpio=0
+UVM_INFO ../vips/gpio_vip/gpio_scoreboard.sv(45) @ 3775000: uvm_test_top.gpio_e.sb [GPIO_SB] [SCOREBOARD MATCH] Monitored verified pattern: gpio_in=0x5a, gpio_out=0x00
+  PASS: GPIO input register read matches driven pattern 0x5A
+UVM_INFO ../vips/gpio_vip/gpio_monitor.sv(48) @ 4045000: uvm_test_top.gpio_e.agent.mon [GPIO_MON] Monitored GPIO state change: in=0x5a, out=0xa0, irq_gpio=0
+UVM_INFO ../vips/gpio_vip/gpio_scoreboard.sv(45) @ 4045000: uvm_test_top.gpio_e.sb [GPIO_SB] [SCOREBOARD MATCH] Monitored verified pattern: gpio_in=0x5a, gpio_out=0xa0
+  PASS: GPIO output pins successfully drive configured pattern 0xA0
+UVM_INFO ../vips/gpio_vip/gpio_monitor.sv(48) @ 4215000: uvm_test_top.gpio_e.agent.mon [GPIO_MON] Monitored GPIO state change: in=0x5b, out=0xa0, irq_gpio=0
+UVM_INFO ../vips/gpio_vip/gpio_scoreboard.sv(45) @ 4215000: uvm_test_top.gpio_e.sb [GPIO_SB] [SCOREBOARD MATCH] Monitored verified pattern: gpio_in=0x5b, gpio_out=0xa0
+UVM_INFO ../vips/gpio_vip/gpio_monitor.sv(48) @ 4225000: uvm_test_top.gpio_e.agent.mon [GPIO_MON] Monitored GPIO state change: in=0x5b, out=0xa0, irq_gpio=1
+UVM_INFO ../vips/gpio_vip/gpio_scoreboard.sv(45) @ 4225000: uvm_test_top.gpio_e.sb [GPIO_SB] [SCOREBOARD MATCH] Monitored verified pattern: gpio_in=0x5b, gpio_out=0xa0
+  PASS: GPIO rising-edge interrupt asserted pic_interrupts[5] (irq_gpio)
+UVM_INFO ../vips/gpio_vip/gpio_monitor.sv(48) @ 4325000: uvm_test_top.gpio_e.agent.mon [GPIO_MON] Monitored GPIO state change: in=0x5b, out=0xa0, irq_gpio=0
+UVM_INFO ../vips/gpio_vip/gpio_scoreboard.sv(45) @ 4325000: uvm_test_top.gpio_e.sb [GPIO_SB] [SCOREBOARD MATCH] Monitored verified pattern: gpio_in=0x5b, gpio_out=0xa0
+  PASS: GPIO interrupt successfully cleared via W1C status write
+
+[TEST 4] SPI VIP Integration Smoke Test (Base 0x4000_5000)...
+UVM_INFO ../vips/gpio_vip/gpio_monitor.sv(48) @ 4375000: uvm_test_top.gpio_e.agent.mon [GPIO_MON] Monitored GPIO state change: in=0x00, out=0xa0, irq_gpio=0
+UVM_INFO ../vips/gpio_vip/gpio_scoreboard.sv(45) @ 4375000: uvm_test_top.gpio_e.sb [GPIO_SB] [SCOREBOARD MATCH] Monitored verified pattern: gpio_in=0x00, gpio_out=0xa0
+  PASS: SPI_SR default status shows RX_EMPTY=1, TX_EMPTY=1 (0x00000005)
+  PASS: SPI chip select asserted (spi_cs_n = 0)
+UVM_INFO ../vips/spi_vip/spi_monitor.sv(59) @ 5065000: uvm_test_top.spi_e.agent.mon [SPI_MON] Monitored SPI 8-bit frame: MOSI=0x3c, MISO=0xa5
+UVM_INFO ../vips/spi_vip/spi_scoreboard.sv(49) @ 5065000: uvm_test_top.spi_e.sb [SPI_SB] [SCOREBOARD MATCH] Monitored standard test byte 0x3C on MOSI line
+UVM_INFO ../vips/spi_vip/spi_scoreboard.sv(64) @ 5065000: uvm_test_top.spi_e.sb [SPI_SB] [SCOREBOARD MATCH] Monitored verified slave response byte 0xA5 on MISO line
+  PASS: SPI read back from DRR completed with OKAY (received 0x00)
+
+[TEST 5] Timer VIP Integration Smoke Test (Base 0x4000_1000)...
+UVM_INFO ../vips/timer_vip/timer_monitor.sv(58) @ 6845000: uvm_test_top.timer_e.agent.mon [TIMER_MON] Monitored Timer read: 0x00000007 (count/status)
+UVM_INFO ../vips/timer_vip/timer_scoreboard.sv(37) @ 6845000: uvm_test_top.timer_e.sb [TIMER_SB] [SCOREBOARD MATCH] Verified Timer counter progression: 7
+  INFO: Timer initial count: 7
+UVM_INFO ../vips/timer_vip/timer_monitor.sv(46) @ 6925000: uvm_test_top.timer_e.agent.mon [TIMER_MON] Monitored Timer IRQ transition: irq_timer = 1
+UVM_INFO ../vips/timer_vip/timer_scoreboard.sv(31) @ 6925000: uvm_test_top.timer_e.sb [TIMER_SB] [SCOREBOARD MATCH] Verified Timer compare-match interrupt (irq_timer=1)
+UVM_INFO ../vips/timer_vip/timer_monitor.sv(58) @ 7175000: uvm_test_top.timer_e.agent.mon [TIMER_MON] Monitored Timer read: 0x00000028 (count/status)
+UVM_INFO ../vips/timer_vip/timer_scoreboard.sv(31) @ 7175000: uvm_test_top.timer_e.sb [TIMER_SB] [SCOREBOARD MATCH] Verified Timer compare-match interrupt (irq_timer=1)
+UVM_INFO ../vips/timer_vip/timer_scoreboard.sv(37) @ 7175000: uvm_test_top.timer_e.sb [TIMER_SB] [SCOREBOARD MATCH] Verified Timer counter progression: 40
+  INFO: Timer count after 25 cycles: 40
+  PASS: Timer counter monotonically progressed past comparison threshold
+  PASS: Timer compare match triggered pic_interrupts[4] (irq_timer)
+UVM_INFO ../vips/timer_vip/timer_monitor.sv(46) @ 7275000: uvm_test_top.timer_e.agent.mon [TIMER_MON] Monitored Timer IRQ transition: irq_timer = 0
+  PASS: Timer interrupt successfully cleared via W1C status write
+
+[TEST 6] Arithmetic Accelerator VIP Integration Smoke Test (Base 0x4000_3000)...
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_monitor.sv(59) @ 7685000: uvm_test_top.accel_e.agent.mon [ACCEL_MON] Monitored direct mode register read = 0x0000000c (12)
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_scoreboard.sv(46) @ 7685000: uvm_test_top.accel_e.sb [ACCEL_SB] [SCOREBOARD MATCH] ADD Operation Result Verified: 7 + 5 = 12
+  PASS: Direct Mode ADD: 7 + 5 = 12 (Expected 12)
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_monitor.sv(59) @ 8075000: uvm_test_top.accel_e.agent.mon [ACCEL_MON] Monitored direct mode register read = 0x00000009 (9)
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_scoreboard.sv(50) @ 8075000: uvm_test_top.accel_e.sb [ACCEL_SB] [SCOREBOARD MATCH] SUB Operation Result Verified: 15 - 6 = 9
+  PASS: Direct Mode SUB: 15 - 6 = 9 (Expected 9)
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_monitor.sv(59) @ 8465000: uvm_test_top.accel_e.agent.mon [ACCEL_MON] Monitored direct mode register read = 0x0000002a (42)
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_scoreboard.sv(54) @ 8465000: uvm_test_top.accel_e.sb [ACCEL_SB] [SCOREBOARD MATCH] MUL Operation Result Verified: 6 * 7 = 42
+  PASS: Direct Mode MUL: 6 * 7 = 42 (Expected 42)
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_monitor.sv(59) @ 8855000: uvm_test_top.accel_e.agent.mon [ACCEL_MON] Monitored direct mode register read = 0x00000005 (5)
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_scoreboard.sv(58) @ 8855000: uvm_test_top.accel_e.sb [ACCEL_SB] [SCOREBOARD MATCH] DIV Operation Result Verified: 20 / 4 = 5
+  PASS: Direct Mode DIV: 20 / 4 = 5 (Expected 5)
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_monitor.sv(59) @ 9655000: uvm_test_top.accel_e.agent.mon [ACCEL_MON] Monitored direct mode register read = 0x00000578 (1400)
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_scoreboard.sv(62) @ 9655000: uvm_test_top.accel_e.sb [ACCEL_SB] [SCOREBOARD MATCH] MAC Operation Result Verified: (10*20) + (30*40) = 1400
+  PASS: Direct Mode MAC: (10*20) + (30*40) = 1400 (Expected 1400)
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_monitor.sv(59) @ 10045000: uvm_test_top.accel_e.agent.mon [ACCEL_MON] Monitored direct mode register read = 0x00000006 (6)
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_scoreboard.sv(70) @ 10045000: uvm_test_top.accel_e.sb [ACCEL_SB] [SCOREBOARD OBSERVED] Accelerator captured result: 0x00000006 (6)
+  PASS: Divide-by-zero correctly asserted ACCEL_STATUS.error (bit 2)
+
+[TEST 7] DMA & Accelerator Autonomous Pipeline Integration Test...
+UVM_INFO ../vips/dma_vip/dma_monitor.sv(66) @ 11965000: uvm_test_top.dma_e.agent.mon [DMA_MON] Monitored DMA Master Read from DMEM: Addr=0x10000100
+UVM_INFO ../vips/dma_vip/dma_scoreboard.sv(40) @ 11965000: uvm_test_top.dma_e.sb [DMA_SB] [SCOREBOARD MATCH] DMA fetched operand from source DMEM: Addr=0x10000100
+UVM_INFO ../vips/dma_vip/dma_monitor.sv(66) @ 12015000: uvm_test_top.dma_e.agent.mon [DMA_MON] Monitored DMA Master Read from DMEM: Addr=0x10000104
+UVM_INFO ../vips/dma_vip/dma_scoreboard.sv(40) @ 12015000: uvm_test_top.dma_e.sb [DMA_SB] [SCOREBOARD MATCH] DMA fetched operand from source DMEM: Addr=0x10000104
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_monitor.sv(47) @ 12065000: uvm_test_top.accel_e.agent.mon [ACCEL_MON] Monitored streaming result = 0x0000001e (30), last=0
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_scoreboard.sv(66) @ 12065000: uvm_test_top.accel_e.sb [ACCEL_SB] [SCOREBOARD MATCH] Streamed Pipeline Result Verified: 30
+UVM_INFO ../vips/dma_vip/dma_monitor.sv(57) @ 12085000: uvm_test_top.dma_e.agent.mon [DMA_MON] Monitored DMA Master Write to DMEM: Addr=0x10000200
+UVM_INFO ../vips/dma_vip/dma_scoreboard.sv(35) @ 12085000: uvm_test_top.dma_e.sb [DMA_SB] [SCOREBOARD MATCH] DMA wrote valid result to destination DMEM: Addr=0x10000200
+UVM_INFO ../vips/dma_vip/dma_monitor.sv(66) @ 12155000: uvm_test_top.dma_e.agent.mon [DMA_MON] Monitored DMA Master Read from DMEM: Addr=0x10000108
+UVM_INFO ../vips/dma_vip/dma_scoreboard.sv(40) @ 12155000: uvm_test_top.dma_e.sb [DMA_SB] [SCOREBOARD MATCH] DMA fetched operand from source DMEM: Addr=0x10000108
+UVM_INFO ../vips/dma_vip/dma_monitor.sv(66) @ 12205000: uvm_test_top.dma_e.agent.mon [DMA_MON] Monitored DMA Master Read from DMEM: Addr=0x1000010c
+UVM_INFO ../vips/dma_vip/dma_scoreboard.sv(40) @ 12205000: uvm_test_top.dma_e.sb [DMA_SB] [SCOREBOARD MATCH] DMA fetched operand from source DMEM: Addr=0x1000010c
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_monitor.sv(47) @ 12255000: uvm_test_top.accel_e.agent.mon [ACCEL_MON] Monitored streaming result = 0x0000012c (300), last=0
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_scoreboard.sv(66) @ 12255000: uvm_test_top.accel_e.sb [ACCEL_SB] [SCOREBOARD MATCH] Streamed Pipeline Result Verified: 300
+UVM_INFO ../vips/dma_vip/dma_monitor.sv(57) @ 12275000: uvm_test_top.dma_e.agent.mon [DMA_MON] Monitored DMA Master Write to DMEM: Addr=0x10000204
+UVM_INFO ../vips/dma_vip/dma_scoreboard.sv(35) @ 12275000: uvm_test_top.dma_e.sb [DMA_SB] [SCOREBOARD MATCH] DMA wrote valid result to destination DMEM: Addr=0x10000204
+UVM_INFO ../vips/dma_vip/dma_monitor.sv(66) @ 12345000: uvm_test_top.dma_e.agent.mon [DMA_MON] Monitored DMA Master Read from DMEM: Addr=0x10000110
+UVM_INFO ../vips/dma_vip/dma_scoreboard.sv(40) @ 12345000: uvm_test_top.dma_e.sb [DMA_SB] [SCOREBOARD MATCH] DMA fetched operand from source DMEM: Addr=0x10000110
+UVM_INFO ../vips/dma_vip/dma_monitor.sv(66) @ 12395000: uvm_test_top.dma_e.agent.mon [DMA_MON] Monitored DMA Master Read from DMEM: Addr=0x10000114
+UVM_INFO ../vips/dma_vip/dma_scoreboard.sv(40) @ 12395000: uvm_test_top.dma_e.sb [DMA_SB] [SCOREBOARD MATCH] DMA fetched operand from source DMEM: Addr=0x10000114
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_monitor.sv(47) @ 12445000: uvm_test_top.accel_e.agent.mon [ACCEL_MON] Monitored streaming result = 0x00000014 (20), last=0
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_scoreboard.sv(66) @ 12445000: uvm_test_top.accel_e.sb [ACCEL_SB] [SCOREBOARD MATCH] Streamed Pipeline Result Verified: 20
+UVM_INFO ../vips/dma_vip/dma_monitor.sv(57) @ 12465000: uvm_test_top.dma_e.agent.mon [DMA_MON] Monitored DMA Master Write to DMEM: Addr=0x10000208
+UVM_INFO ../vips/dma_vip/dma_scoreboard.sv(35) @ 12465000: uvm_test_top.dma_e.sb [DMA_SB] [SCOREBOARD MATCH] DMA wrote valid result to destination DMEM: Addr=0x10000208
+UVM_INFO ../vips/dma_vip/dma_monitor.sv(66) @ 12535000: uvm_test_top.dma_e.agent.mon [DMA_MON] Monitored DMA Master Read from DMEM: Addr=0x10000118
+UVM_INFO ../vips/dma_vip/dma_scoreboard.sv(40) @ 12535000: uvm_test_top.dma_e.sb [DMA_SB] [SCOREBOARD MATCH] DMA fetched operand from source DMEM: Addr=0x10000118
+UVM_INFO ../vips/dma_vip/dma_monitor.sv(66) @ 12585000: uvm_test_top.dma_e.agent.mon [DMA_MON] Monitored DMA Master Read from DMEM: Addr=0x1000011c
+UVM_INFO ../vips/dma_vip/dma_scoreboard.sv(40) @ 12585000: uvm_test_top.dma_e.sb [DMA_SB] [SCOREBOARD MATCH] DMA fetched operand from source DMEM: Addr=0x1000011c
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_monitor.sv(47) @ 12635000: uvm_test_top.accel_e.agent.mon [ACCEL_MON] Monitored streaming result = 0x00000064 (100), last=1
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_scoreboard.sv(66) @ 12635000: uvm_test_top.accel_e.sb [ACCEL_SB] [SCOREBOARD MATCH] Streamed Pipeline Result Verified: 100
+UVM_INFO ../vips/dma_vip/dma_monitor.sv(57) @ 12655000: uvm_test_top.dma_e.agent.mon [DMA_MON] Monitored DMA Master Write to DMEM: Addr=0x1000020c
+UVM_INFO ../vips/dma_vip/dma_scoreboard.sv(35) @ 12655000: uvm_test_top.dma_e.sb [DMA_SB] [SCOREBOARD MATCH] DMA wrote valid result to destination DMEM: Addr=0x1000020c
+UVM_INFO ../vips/dma_vip/dma_monitor.sv(46) @ 12715000: uvm_test_top.dma_e.agent.mon [DMA_MON] Monitored DMA IRQ transition: irq_dma = 1
+UVM_INFO ../vips/dma_vip/dma_scoreboard.sv(30) @ 12715000: uvm_test_top.dma_e.sb [DMA_SB] [SCOREBOARD MATCH] DMA completion interrupt verified (irq_dma=1)
+  PASS: DMA completion successfully asserted pic_interrupts[1] (irq_dma)
+  PASS: DMA_STATUS confirms done = 1 (0x00000002)
+  PASS: Streamed Result[0] in DMEM: 10 + 20 = 30 (Expected 30)
+  PASS: Streamed Result[1] in DMEM: 100 + 200 = 300 (Expected 300)
+  PASS: Streamed Result[2] in DMEM: 5 + 15 = 20 (Expected 20)
+  PASS: Streamed Result[3] in DMEM: 50 + 50 = 100 (Expected 100)
+
+============================================================================
+  [SUCCESS] ALL 7 INTEGRATION SMOKE TESTS PASSED PERFECTLY WITH 0 ERRORS!
+  All 6 VIP interfaces verified structurally and functionally with SoC RTL.
+============================================================================
+UVM_INFO tb_vip_smoke_top.sv(375) @ 15875000: uvm_test_top [UVM_VIP_SMOKE] All procedural integration smoke tests reported complete.
+UVM_INFO /home/student/snps_tools_target/vcs/U-2023.03/etc/uvm/base/uvm_objection.svh(1274) @ 15875000: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+UVM_INFO ../vips/arithmetic_accelerator_vip/arithmetic_accelerator_scoreboard.sv(78) @ 15875000: uvm_test_top.accel_e.sb [ACCEL_SB] Arithmetic Accelerator Scoreboard Summary: 10 Matches, 0 Mismatches
+UVM_INFO ../vips/dma_vip/dma_scoreboard.sv(46) @ 15875000: uvm_test_top.dma_e.sb [DMA_SB] DMA Scoreboard Summary: 13 Matches, 0 Mismatches
+UVM_INFO ../vips/gpio_vip/gpio_scoreboard.sv(56) @ 15875000: uvm_test_top.gpio_e.sb [GPIO_SB] GPIO Scoreboard Summary: 6 Matches, 0 Mismatches
+UVM_INFO ../vips/spi_vip/spi_scoreboard.sv(70) @ 15875000: uvm_test_top.spi_e.sb [SPI_SB] SPI Scoreboard Summary: 2 Matches, 0 Mismatches
+UVM_INFO ../vips/timer_vip/timer_scoreboard.sv(43) @ 15875000: uvm_test_top.timer_e.sb [TIMER_SB] Timer Scoreboard Summary: 4 Matches, 0 Mismatches
+UVM_INFO ../vips/uart_vip/uart_scoreboard.sv(57) @ 15875000: uvm_test_top.uart_e.sb [UART_SB] UART Scoreboard Summary: 1 Matches, 0 Mismatches
+
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO :   84
+UVM_WARNING :    0
+UVM_ERROR :    0
+UVM_FATAL :    0
+** Report counts by id
+[ACCEL_MON]    10
+[ACCEL_SB]    11
+[DMA_MON]    13
+[DMA_SB]    14
+[GPIO_MON]     6
+[GPIO_SB]     7
+[RNTST]     1
+[SPI_MON]     1
+[SPI_SB]     3
+[TEST_DONE]     1
+[TIMER_MON]     4
+[TIMER_SB]     5
+[UART_MON]     1
+[UART_SB]     2
+[UVM_VIP_SMOKE]     5
+$finish called from file "/home/student/snps_tools_target/vcs/U-2023.03/etc/uvm/base/uvm_root.svh", line 437.
+$finish at simulation time             15875000
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 15875000 ps
+CPU Time:      0.160 seconds;       Data structure size:   6.7Mb
+Sat Nov  7 14:49:22 2026

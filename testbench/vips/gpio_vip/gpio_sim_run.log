@@ -1,0 +1,71 @@
+Command: /home/student/Downloads/Honours project/Project/testbench/vips/gpio_vip/./simv_gpio -l gpio_sim_run.log
+Chronologic VCS simulator copyright 1991-2023
+Contains Synopsys proprietary information.
+Compiler version U-2023.03_Full64; Runtime version U-2023.03_Full64;  Nov  7 14:47 2026
+----------------------------------------------------------------
+UVM-1.1d.Synopsys
+(C) 2007-2013 Mentor Graphics Corporation
+(C) 2007-2013 Cadence Design Systems, Inc.
+(C) 2006-2013 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_NO_DEPRECATED undefined.
+  See http://www.eda.org/svdb/view.php?id=3313 for more details.
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_OBJECT_MUST_HAVE_CONSTRUCTOR undefined.
+  See http://www.eda.org/svdb/view.php?id=3770 for more details.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+UVM_INFO @ 0: reporter [RNTST] Running test gpio_test...
+UVM_INFO gpio_test.sv(28) @ 0: uvm_test_top [GPIO_TEST] Executing GPIO VIP Functional Verification Test...
+UVM_INFO gpio_seq.sv(134) @ 0: uvm_test_top.env.agent.seqr@@seq [GPIO_SEQ] Starting GPIO Smoke Sequence...
+UVM_INFO gpio_driver.sv(53) @ 25000: uvm_test_top.env.agent.drv [GPIO_DRV] Driving gpio_in pins = 0x5a
+UVM_INFO gpio_monitor.sv(48) @ 35000: uvm_test_top.env.agent.mon [GPIO_MON] Monitored GPIO state change: in=0x5a, out=0x00, irq_gpio=0
+UVM_INFO gpio_scoreboard.sv(45) @ 35000: uvm_test_top.env.sb [GPIO_SB] [SCOREBOARD MATCH] Monitored verified pattern: gpio_in=0x5a, gpio_out=0x00
+UVM_INFO gpio_seq.sv(37) @ 95000: uvm_test_top.env.agent.seqr@@seq.in_seq [GPIO_SEQ] Read GPIO_IN_REG returned: 0x5a
+UVM_INFO gpio_monitor.sv(48) @ 195000: uvm_test_top.env.agent.mon [GPIO_MON] Monitored GPIO state change: in=0x5a, out=0xa0, irq_gpio=0
+UVM_INFO gpio_scoreboard.sv(37) @ 195000: uvm_test_top.env.sb [GPIO_SB] [SCOREBOARD MATCH] Monitored gpio_out 0xa0 matches expected 0xa0
+UVM_INFO gpio_seq.sv(71) @ 215000: uvm_test_top.env.agent.seqr@@seq.out_seq [GPIO_SEQ] Configured GPIO outputs to drive pattern 0xA0
+UVM_INFO gpio_driver.sv(53) @ 285000: uvm_test_top.env.agent.drv [GPIO_DRV] Driving gpio_in pins = 0x00
+UVM_INFO gpio_monitor.sv(48) @ 295000: uvm_test_top.env.agent.mon [GPIO_MON] Monitored GPIO state change: in=0x00, out=0xa0, irq_gpio=0
+UVM_INFO gpio_scoreboard.sv(45) @ 295000: uvm_test_top.env.sb [GPIO_SB] [SCOREBOARD MATCH] Monitored verified pattern: gpio_in=0x00, gpio_out=0xa0
+UVM_INFO gpio_driver.sv(53) @ 315000: uvm_test_top.env.agent.drv [GPIO_DRV] Driving gpio_in pins = 0x01
+UVM_INFO gpio_monitor.sv(48) @ 325000: uvm_test_top.env.agent.mon [GPIO_MON] Monitored GPIO state change: in=0x01, out=0xa0, irq_gpio=0
+UVM_INFO gpio_scoreboard.sv(45) @ 325000: uvm_test_top.env.sb [GPIO_SB] [SCOREBOARD MATCH] Monitored verified pattern: gpio_in=0x01, gpio_out=0xa0
+UVM_INFO gpio_monitor.sv(48) @ 335000: uvm_test_top.env.agent.mon [GPIO_MON] Monitored GPIO state change: in=0x01, out=0xa0, irq_gpio=1
+UVM_INFO gpio_scoreboard.sv(45) @ 335000: uvm_test_top.env.sb [GPIO_SB] [SCOREBOARD MATCH] Monitored verified pattern: gpio_in=0x01, gpio_out=0xa0
+UVM_INFO gpio_monitor.sv(48) @ 375000: uvm_test_top.env.agent.mon [GPIO_MON] Monitored GPIO state change: in=0x01, out=0xa0, irq_gpio=0
+UVM_INFO gpio_scoreboard.sv(45) @ 375000: uvm_test_top.env.sb [GPIO_SB] [SCOREBOARD MATCH] Monitored verified pattern: gpio_in=0x01, gpio_out=0xa0
+UVM_INFO gpio_seq.sv(118) @ 395000: uvm_test_top.env.agent.seqr@@seq.int_seq [GPIO_SEQ] Completed GPIO edge interrupt trigger and W1C clear sequence
+UVM_INFO gpio_seq.sv(138) @ 395000: uvm_test_top.env.agent.seqr@@seq [GPIO_SEQ] GPIO Smoke Sequence completed successfully.
+UVM_INFO gpio_test.sv(36) @ 2395000: uvm_test_top [GPIO_TEST] GPIO VIP Test Finished.
+UVM_INFO /home/student/snps_tools_target/vcs/U-2023.03/etc/uvm/base/uvm_objection.svh(1274) @ 2395000: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+UVM_INFO gpio_scoreboard.sv(56) @ 2395000: uvm_test_top.env.sb [GPIO_SB] GPIO Scoreboard Summary: 6 Matches, 0 Mismatches
+
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO :   25
+UVM_WARNING :    0
+UVM_ERROR :    0
+UVM_FATAL :    0
+** Report counts by id
+[GPIO_DRV]     3
+[GPIO_MON]     6
+[GPIO_SB]     7
+[GPIO_SEQ]     5
+[GPIO_TEST]     2
+[RNTST]     1
+[TEST_DONE]     1
+$finish called from file "/home/student/snps_tools_target/vcs/U-2023.03/etc/uvm/base/uvm_root.svh", line 437.
+$finish at simulation time              2395000
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 2395000 ps
+CPU Time:      0.140 seconds;       Data structure size:   0.3Mb
+Sat Nov  7 14:47:20 2026

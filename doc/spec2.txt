@@ -1,0 +1,2182 @@
+Design and RTL Implementation of a RISC-V Based SoC with a
+Hardware Arithmetic Accelerator
+Detailed Project Specification — AXI4-Lite Interconnect Version
+This document has the same structure and level of detail as the earlier AHB-Lite/APB
+specification (block diagram → full signal lists → memory map → control path → data path →
+design requirements), rebuilt around an AXI4-Lite interconnect. The interconnect itself is
+the RTL already built and verified in this project ( axil_interconnect.v , wrapper
+soc_axil_fabric.v ); every port name, address and permission below matches that RTL.
+What changed compared with the AHB-Lite/APB version
+Topic
+
+AHB-Lite/APB version
+
+This version (AXI4-Lite)
+
+Bus fabric
+
+AHB-Lite interconnect + AHB-to-APB
+bridge + APB decoder
+
+One AXI4-Lite interconnect, no
+bridge/decoder stage
+
+Peripheral
+interface
+
+APB (PSEL/PENABLE/PRDATA)
+
+AXI4-Lite slave (5 channels, valid/ready)
+
+DMA
+
+Dedicated side port into Data Memory
+(Decision D1)
+
+Real bus master on the fabric (D1
+resolved)
+
+Access
+control
+
+None
+
+Per-master read/write permission per
+slave, DECERR on violation
+
+Error
+reporting
+
+PSLVERR
+
+BRESP / RRESP : OKAY / SLVERR /
+DECERR
+
+Reset
+
+active-low rst_l everywhere
+
+core + peripherals active-low,
+interconnect rst active-high ( rst =
+~rst_n )
+
+INTRODUCTION
+Problem Statement
+Arithmetic-intensive applications repeatedly perform multiplication, division and multiplyaccumulate operations. Executed entirely in software on a general-purpose processor, these
+increase workload and execution time. This project designs a compact RISC-V based SoC in
+which the processor only configures and dispatches jobs, while a dedicated Arithmetic
+Accelerator (ADD, SUB, MUL, DIV, MAC) and a DMA Controller perform the data
+movement and computation off the processor's critical path.
+
+Proposed System Aims
+Stage operand blocks in Data Memory from software.
+Move operands to the accelerator and results back to Data Memory with a DMA
+Controller, without the processor copying data word by word.
+Execute ADD, SUB, MUL, DIV and MAC on a pipelined hardware datapath.
+Keep the RISC-V core limited to configuration, job dispatch and result handling.
+Report job status, results and errors over UART and drive status lines on GPIO.
+Let an external host configure the accelerator and read results over SPI, independent
+of the processor's instruction stream.
+
+PROPOSED SoC ARCHITECTURE
+The VeeR EL2 RISC-V core is the central controller. Its two external bus interfaces
+(instruction fetch and load/store) are converted to AXI4-Lite and connected, together with
+the DMA Controller (and optionally an SPI bridge, see Decision D2), to one AXI4-Lite
+interconnect that routes every access to the memories and peripheral register banks by
+address.
+The compute path is Data Memory → DMA Controller → Arithmetic Accelerator → DMA
+Controller → Data Memory. The DMA reads operand pairs from Data Memory over the
+fabric, streams them into the accelerator over a dedicated valid/ready link, receives results
+over the same link, and writes them back to Data Memory over the fabric. The processor is
+involved only before the job (configuration) and after it (result read-out, UART logging,
+GPIO update).
+Components
+VeeR EL2 RISC-V Processor — central controller (provided).
+AHB-Lite → AXI4-Lite bridges (×2) — one for instruction fetch (read-only), one for
+load/store; also convert 64-bit core data width to the 32-bit fabric width.
+AXI4-Lite Interconnect — S masters × 8 slaves; address decode, arbitration,
+permissions, DECERR.
+Instruction Memory — AXI4-Lite slave, read-only through the fabric (loaded by
+testbench $readmemh ).
+Data Memory — AXI4-Lite slave; operand and result buffers.
+Arithmetic Accelerator — AXI4-Lite register slave + dedicated streaming link to the
+DMA.
+DMA Controller — AXI4-Lite register slave and AXI4-Lite master; dedicated
+streaming link to the accelerator.
+SPI Controller — AXI4-Lite register slave (CPU-driven SPI master); external-access
+path per Decision D2.
+UART, Timer, GPIO — AXI4-Lite register slaves.
+
+Interrupt Controller (VeeR PIC) — aggregates six interrupt lines into the core.
+Selected IPs
+1. Arithmetic Accelerator — memory-mapped datapath: ADD, SUB, MUL, DIV, MAC,
+pipelined.
+2. DMA Controller — autonomous operand/result mover and bus master.
+3. SPI Controller — memory-mapped SPI peripheral exposing accelerator access to an
+external host.
+Process Flow
+Software stages operand pairs in Data Memory
+→ RISC-V (LSU → fabric) configures Accelerator, then DMA, then sets DMA
+start
+→ DMA (fabric master) reads operand pair A,B from Data Memory
+→ DMA streams the pair into the Accelerator (dedicated link)
+→ Accelerator computes (pipelined) and streams result back to the DMA
+→ DMA (fabric master) writes the result word to Data Memory
+→ after the last result: Accelerator/DMA raise interrupt → PIC → RISC-V
+→ RISC-V reads status/results, logs over UART, updates GPIO
+→ (independently) an external host issues jobs / reads results over SPI
+
+BLOCK DIAGRAM
+clk
+
+rst_n
+
+RISC-V SoC
+VeeR EL2 RISC-V Processor
+
+IFU AHB-Lite
+
+LSU AHB-Lite
+
+AHB-Lite to AXI4-Lite
+Bridge (IFU, read-only)
+
+AHB-Lite to AXI4-Lite
+Bridge (LSU)
+
+AXI4-Lite Interconnect
+s00 IFU, s01 LSU, s02 DMA,
+(s03 SPI bridge, D2)
+AXI4-Lite master
+
+Instruction Memory
+m00 0x0000_0000
+
+DMA Controller
+m06 0x4000_4000 + master
+port s02
+
+Data Memory
+m01 0x1000_0000
+
+Dedicated operand / result
+stream
+
+UART
+m02 0x4000_0000
+
+UART Interface (External)
+uart_tx, uart_rx
+
+GPIO Pins (External)
+gpio_in, gpio_out
+
+Timer
+m03 0x4000_1000
+
+GPIO
+m04 0x4000_2000
+
+Arithmetic Accelerator
+m05 0x4000_3000
+
+Interrupt Controller (PIC)
+
+SPI Controller
+m07 0x4000_5000
+
+SPI Interface (External)
+spi_sclk, spi_mosi, spi_miso,
+spi_cs_n
+
+Design Decision D1 (resolved): the DMA is a genuine AXI4-Lite master ( s02 ). The earlier
+dedicated DMA-to-Data-Memory port is no longer needed; Data Memory has a single
+AXI4-Lite slave port. Cost: the interconnect handles one transaction at a time, so CPU and
+DMA share fabric bandwidth (see Data Path §7).
+Design Decision D2 (open): how an external SPI host reaches the accelerator registers.
+Option A (recommended): an SPI-slave-to-AXI4-Lite-master bridge as a fourth
+master s03 (permissions: read/write ACC registers, read DMEM). Requires changing
+
+the generator preset from 3×8 to 4×8 (one table line + regenerate; the interconnect
+core is already parameterised for any S_COUNT).
+Option B: shadow register set inside the SPI controller that the CPU services. No extra
+master, but the CPU must poll — it defeats the "independent of the processor"
+requirement in the abstract.
+
+FABRIC CONFIGURATION (the verified interconnect)
+Item
+
+Value
+
+Module
+
+axil_interconnect (core), soc_axil_fabric (configured wrapper), port
+style sNN_axil_* / mNN_axil_*
+
+Address / data
+width
+
+32 / 32 bits, wstrb 4 bits
+
+Clock / reset
+
+single clk ; rst active-high, synchronous
+
+Arbitration
+
+round-robin over {write, read} of every master port, grant held until response
+accepted
+
+Concurrency
+
+one transaction in flight at a time (shared-bus style); no outstanding
+transactions, no reordering
+
+Errors
+
+unmapped or forbidden access → internal DECERR ( 2'b11 ), read data 0 ; slave
+SLVERR ( 2'b10 ) passed through
+
+Burst / ID / LAST
+
+none (AXI4-Lite)
+
+Verified
+
+random + directed regression, configs 1×1 … 5×8, wrapper and SoC fabric (0
+errors)
+
+Connectivity and permissions (mask bit i = master i)
+Slave
+
+Port
+
+Base
+
+Window
+
+s00 IFU
+
+s01 LSU
+
+s02 DMA
+
+Instruction Memory
+
+m00
+
+0x0000_0000
+
+64 KB
+
+R
+
+R
+
+–
+
+Data Memory
+
+m01
+
+0x1000_0000
+
+64 KB
+
+–
+
+R/W
+
+R/W
+
+UART
+
+m02
+
+0x4000_0000
+
+4 KB
+
+–
+
+R/W
+
+–
+
+Timer
+
+m03
+
+0x4000_1000
+
+4 KB
+
+–
+
+R/W
+
+–
+
+GPIO
+
+m04
+
+0x4000_2000
+
+4 KB
+
+–
+
+R/W
+
+–
+
+Arithmetic Accelerator
+
+m05
+
+0x4000_3000
+
+4 KB
+
+–
+
+R/W
+
+–
+
+DMA Controller (registers)
+
+m06
+
+0x4000_4000
+
+4 KB
+
+–
+
+R/W
+
+–
+
+SPI Controller
+
+m07
+
+0x4000_5000
+
+4 KB
+
+–
+
+R/W
+
+–
+
+"–" means any access returns DECERR. Writes to Instruction Memory return DECERR for
+every master.
+
+SIGNAL LIST
+Conventions
+All AXI4-Lite interfaces use the same 19 signals. They are listed once here (direction shown
+from the slave's point of view; a master has every direction reversed). In the sections below,
+an IP's AXI4-Lite port is referred to as "standard AXI4-Lite slave port" (or master port) with
+the prefix noted.
+Standard AXI4-Lite interface (slave view)
+
+Channel
+
+Signal
+
+Dir
+(slave)
+
+Width Description
+
+Write address
+
+awaddr
+
+In
+
+32
+
+Write address (slaves decode the low 12 bits for 4
+KB windows)
+
+awprot
+
+In
+
+3
+
+Protection ( [1] = non-secure); may be ignored
+by slaves
+
+awvalid
+
+In
+
+1
+
+Master presents a write address
+
+awready
+
+Out
+
+1
+
+Slave accepts the address
+
+wdata
+
+In
+
+32
+
+Write data
+
+wstrb
+
+In
+
+4
+
+Byte-lane enables
+
+wvalid
+
+In
+
+1
+
+Master presents write data
+
+wready
+
+Out
+
+1
+
+Slave accepts the data
+
+bresp
+
+Out
+
+2
+
+00 OKAY, 10 SLVERR, 11 DECERR
+
+bvalid
+
+Out
+
+1
+
+Response valid
+
+bready
+
+In
+
+1
+
+Master accepts the response
+
+araddr
+
+In
+
+32
+
+Read address
+
+arprot
+
+In
+
+3
+
+Protection
+
+arvalid
+
+In
+
+1
+
+Master presents a read address
+
+arready
+
+Out
+
+1
+
+Slave accepts the address
+
+rdata
+
+Out
+
+32
+
+Read data
+
+rresp
+
+Out
+
+2
+
+Read response code
+
+rvalid
+
+Out
+
+1
+
+Read data valid
+
+rready
+
+In
+
+1
+
+Master accepts read data
+
+clk
+
+In
+
+1
+
+System clock
+
+rst_n
+
+In
+
+1
+
+Active-low reset (fabric receives rst = ~rst_n )
+
+Write data
+
+Write
+response
+
+Read address
+
+Read data
+
+Common
+
+Handshake rules every block must follow
+A transfer happens on a clock edge where valid && ready . valid must not depend
+on ready , must stay asserted with stable payload until accepted. ready may depend
+on valid .
+A slave must accept AW and W in either order and in different cycles (the fabric
+forwards AW first, then W after capturing it). A slave may wait for both before
+responding.
+Exactly one bvalid per write and one rvalid per read, always, even for invalid
+offsets (use SLVERR).
+Every slave must always respond — the fabric has no bus timeout, so one stuck slave
+stalls the whole SoC.
+1. VeeR EL2 RISC-V Processor — Signal List
+VeeR EL2 exposes separate external bus interfaces for instruction fetch and load/store (32bit address, 64-bit data). This specification keeps the AHB-Lite interfaces used in the course
+reference and converts them with the bridges in §2. (If your provided core is built with AXI4
+external interfaces instead, replace the bridges with an AXI4→AXI4-Lite 64→32 converter;
+nothing else in this document changes.)
+A. Instruction Fetch AHB-Lite Interface
+Signal
+
+Direction
+
+Source → Destination
+
+Width
+
+Description
+
+haddr[31:0]
+
+Output
+
+VeeR → IFU bridge
+
+32
+
+Instruction fetch address
+
+hburst[2:0]
+
+Output
+
+VeeR → IFU bridge
+
+3
+
+Burst type; hardwired 000
+
+hmastlock
+
+Output
+
+VeeR → IFU bridge
+
+1
+
+Hardwired 0
+
+hprot[3:0]
+
+Output
+
+VeeR → IFU bridge
+
+4
+
+Protection attributes
+
+hsize[2:0]
+
+Output
+
+VeeR → IFU bridge
+
+3
+
+Transfer size
+
+htrans[1:0]
+
+Output
+
+VeeR → IFU bridge
+
+2
+
+Transfer type
+
+hwrite
+
+Output
+
+VeeR → IFU bridge
+
+1
+
+Always 0 for fetch
+
+hrdata[63:0]
+
+Input
+
+IFU bridge → VeeR
+
+64
+
+Fetched instruction data
+
+hready
+
+Input
+
+IFU bridge → VeeR
+
+1
+
+Transfer complete
+
+hresp
+
+Input
+
+IFU bridge → VeeR
+
+1
+
+Transfer error
+
+B. Load/Store (LSU) AHB-Lite Interface
+
+Signal
+
+Direction
+
+Source → Destination
+
+Width
+
+Description
+
+lsu_haddr[31:0]
+
+Output
+
+VeeR → LSU bridge
+
+32
+
+Data / peripheral address
+
+lsu_hburst[2:0]
+
+Output
+
+VeeR → LSU bridge
+
+3
+
+Hardwired 000
+
+lsu_hmastlock
+
+Output
+
+VeeR → LSU bridge
+
+1
+
+Hardwired 0
+
+lsu_hprot[3:0]
+
+Output
+
+VeeR → LSU bridge
+
+4
+
+Protection attributes
+
+lsu_hsize[2:0]
+
+Output
+
+VeeR → LSU bridge
+
+3
+
+Transfer size
+
+lsu_htrans[1:0]
+
+Output
+
+VeeR → LSU bridge
+
+2
+
+Transfer type
+
+lsu_hwdata[63:0]
+
+Output
+
+VeeR → LSU bridge
+
+64
+
+Store data
+
+lsu_hwrite
+
+Output
+
+VeeR → LSU bridge
+
+1
+
+Read (0) / write (1)
+
+lsu_hrdata[63:0]
+
+Input
+
+LSU bridge → VeeR
+
+64
+
+Load data
+
+lsu_hready
+
+Input
+
+LSU bridge → VeeR
+
+1
+
+Transfer complete
+
+lsu_hresp
+
+Input
+
+LSU bridge → VeeR
+
+1
+
+Transfer error
+
+C. Clock, Reset, Interrupt
+Signal
+
+Direction
+
+Source → Destination
+
+Width
+
+Description
+
+clk
+
+Input
+
+SoC → VeeR
+
+1
+
+System clock
+
+rst_l
+
+Input
+
+SoC → VeeR
+
+1
+
+Active-low core reset
+
+External interrupt input(s)
+
+Input
+
+PIC → VeeR
+
+N*
+
+From the PIC
+
+*Exact count/encoding comes from the VeeR EL2 PIC configuration (2–255 sources). This
+SoC uses 6.
+2. AHB-Lite → AXI4-Lite Bridges (two instances) — Signal List
+Instance IFU bridge (read-only, drives fabric master s00 ) and LSU bridge (read/write,
+drives s01 ).
+A. AHB-Lite side (bridge is the AHB slave) — the VeeR signals of §1A / §1B with directions
+reversed ( haddr , htrans , hsize , hwrite , hwdata in; hrdata , hready , hresp out).
+B. AXI4-Lite side (bridge is the AXI4-Lite master) — the standard interface of the
+Conventions table with directions reversed, connected to s00_axil_* (IFU) or
+
+s01_axil_* (LSU). The IFU bridge ties awvalid , wvalid , bready to 0.
+
+Conversion requirements
+Topic
+
+Requirement
+
+Width 64 → 32
+
+A 64-bit AHB transfer becomes two sequential 32-bit AXI4-Lite transfers
+(low word first); hrdata[63:0] is assembled from both reads. Sub-word
+and word stores map to one beat with the correct wstrb .
+
+Address phase / data
+phase
+
+AHB pipelining (address of next transfer during data of current) is absorbed
+by the bridge; hready low until the AXI4-Lite response returns.
+
+Error mapping
+
+bresp / rresp ≠ OKAY → hresp = 1 (two-cycle AHB error sequence).
+DECERR and SLVERR both become an AHB error.
+
+awprot / arprot
+
+Drive 3'b000 (privileged, secure, data); instruction fetch 3'b100 .
+
+Reset
+
+Bridge reset = rst_n (active-low) while the fabric gets rst = ~rst_n .
+
+3. AXI4-Lite Interconnect — Signal List
+Parameters: S_COUNT masters (3, or 4 with Decision D2 option A), M_COUNT = 8,
+DATA_WIDTH 32, ADDR_WIDTH 32, M_REGIONS 1. Buses are flattened: port i occupies bits
+[i*W +: W] .
+Signal group
+
+Direction
+
+Width
+
+Description
+
+clk
+
+In
+
+1
+
+System clock
+
+rst
+
+In
+
+1
+
+Active-high synchronous reset
+( ~rst_n )
+
+sNN_axil_* (NN =
+00…S-1)
+
+Master-facing
+ports
+
+standard 19
+signals
+
+Fabric acts as slave to each bus master;
+directions per Conventions table
+
+mNN_axil_* (NN =
+00…07)
+
+Slave-facing
+ports
+
+standard 19
+signals
+
+Fabric acts as master to each bus slave;
+directions reversed
+
+Per-slave parameters of the wrapper ( M00_… to M07_… ): BASE_ADDR , ADDR_WIDTH (log2 of
+window: 16 for memories, 12 for peripherals), CONNECT_READ , CONNECT_WRITE (S-bit master
+masks), SECURE .
+Internal behaviour that other blocks depend on: arbiter, IDLE → DECODE → WRITE / READ →
+RESP → WAIT_IDLE state machine, DECERR responder, AW forwarded before W, W
+forwarded after capture.
+
+4. Instruction Memory — Signal List
+64 KB, m00 , base 0x0000_0000 . AXI4-Lite slave (prefix m00_axil_* side), read-only: the
+fabric already returns DECERR for writes, so the memory itself has no write channel logic
+(tie awready , wready low, never asserted).
+Signal
+
+Direction
+
+Source →
+Destination
+
+Width
+
+Description
+
+araddr[15:0] (+ upper
+bits ignored)
+
+Input
+
+Fabric → IMEM
+
+32
+
+Fetch / constant-read
+address
+
+arvalid / arready
+
+In / Out
+
+Fabric ↔ IMEM
+
+1
+
+Read address
+handshake
+
+rdata[31:0] , rresp ,
+rvalid , rready
+
+Out/Out/Out/In IMEM ↔ Fabric
+
+32/2/1/1 Read data channel,
+rresp = OKAY
+
+clk , rst_n
+
+Input
+
+1
+
+SoC → IMEM
+
+Clock/reset
+
+Simulation loading: $readmemh of the firmware image; no bus write path.
+5. Data Memory — Signal List
+64 KB, m01 , base 0x1000_0000 . Standard AXI4-Lite slave; single port (D1 resolved) used
+by both the LSU and the DMA through the fabric. Byte strobes are mandatory (sub-word
+stores from firmware).
+Signal
+
+Direction Source →
+Destination
+
+Width
+
+Description
+
+Standard AXI4-Lite slave
+port
+
+—
+
+Fabric ↔ DMEM
+
+19
+signals
+
+Full read and write
+channels
+
+clk , rst_n
+
+Input
+
+SoC → DMEM
+
+1
+
+Clock/reset
+
+6. Arithmetic Accelerator — Signal List
+A. AXI4-Lite slave port (register access) — standard interface, m05 , base 0x4000_3000 ,
+12-bit offset.
+B. Dedicated operand/result streaming interface (to DMA) — point-to-point valid/ready
+link, not AXI.
+
+Signal
+
+Direction Source →
+Destination
+
+Width Description
+
+dma_op_valid
+
+Input
+
+DMA →
+Accelerator
+
+1
+
+Operand pair presented
+
+dma_op_data_a[31:0]
+
+Input
+
+DMA →
+Accelerator
+
+32
+
+Operand A
+
+dma_op_data_b[31:0]
+
+Input
+
+DMA →
+Accelerator
+
+32
+
+Operand B (ignored by singleoperand ops)
+
+dma_op_ready
+
+Output
+
+Accelerator →
+DMA
+
+1
+
+Pipeline can accept a pair
+
+dma_res_valid
+
+Output
+
+Accelerator →
+DMA
+
+1
+
+Result available
+
+dma_res_data[31:0]
+
+Output
+
+Accelerator →
+DMA
+
+32
+
+Result word
+
+dma_res_ready
+
+Input
+
+DMA →
+Accelerator
+
+1
+
+DMA can accept the result
+
+dma_last
+
+Input
+
+DMA →
+Accelerator
+
+1
+
+Marks the final operand pair
+of the job
+
+C. Status / interrupt
+Signal
+
+Direction
+
+Source → Destination
+
+Width
+
+Description
+
+irq_acc
+
+Output
+
+Accelerator → PIC
+
+1
+
+Job-complete / error interrupt
+
+Register map (base 0x4000_3000 )
+
+Offset
+
+Name
+
+Access Description
+
+0x00
+
+ACC_CTRL
+
+R/W
+
+[2:0] opcode (000 ADD, 001 SUB, 010 MUL, 011 DIV, 100
+MAC), [3] start (self-clearing), [4] soft reset
+
+0x04
+
+ACC_STATUS
+
+R
+
+[0] busy, [1] done, [2] error (divide-by-zero)
+
+0x08
+
+ACC_OPCOUNT
+
+R/W
+
+[15:0] operand pairs in the job
+
+0x0C
+
+ACC_OPERAND_A
+
+R/W
+
+Direct single-operation test register (bypasses DMA)
+
+0x10
+
+ACC_OPERAND_B
+
+R/W
+
+Direct single-operation test register
+
+0x14
+
+ACC_RESULT
+
+R
+
+Last direct-mode result
+
+0x18
+
+ACC_ACC_REG
+
+R/W
+
+MAC accumulator (lower 32 bits)
+
+0x1C
+
+ACC_IRQ_EN
+
+R/W
+
+[0] job-complete interrupt enable
+
+Offsets above 0x1C return SLVERR . Writes honour wstrb per byte lane.
+7. DMA Controller — Signal List
+A. AXI4-Lite slave port (configuration) — standard interface, m06 , base 0x4000_4000 .
+B. AXI4-Lite master port (data movement) — standard interface with directions reversed,
+connected to fabric master port s02 ( s02_axil_* ). Single-beat transfers only;
+awprot / arprot = 3'b000 ; wstrb = 4'hF .
+C. Accelerator-facing streaming interface — the 8 signals of §6B, opposite endpoint.
+D. Interrupt
+Signal
+
+Direction Source →
+Destination
+
+Width Description
+
+irq_dma
+
+Output
+
+1
+
+DMA → PIC
+
+Whole job complete (all results written) or
+bus error
+
+Register map (base 0x4000_4000 ) — one start runs the entire job (operand read, stream,
+result write-back).
+
+Offset
+
+Name
+
+Access Description
+
+0x00
+
+DMA_SRC_ADDR
+
+R/W
+
+Byte address of the operand block (pairs laid out
+A0,B0,A1,B1,… )
+
+0x04
+
+DMA_DST_ADDR
+
+R/W
+
+Byte address of the result block ( R0,R1,… )
+
+0x08
+
+DMA_LENGTH
+
+R/W
+
+Number of operand pairs N (must equal ACC_OPCOUNT )
+
+0x0C
+
+DMA_CTRL
+
+R/W
+
+[0] start (self-clearing), [1] irq enable, [2] abort
+
+0x10
+
+DMA_STATUS
+
+R
+
+[0] busy, [1] done, [2] bus error (non-OKAY
+bresp / rresp ), [3] result-FIFO overflow
+
+0x14
+
+DMA_ERR_ADDR
+
+R
+
+Address of the failing bus access
+
+Per-pair fabric traffic: 2 reads (A, B) + 1 write (result) = 3 AXI4-Lite transactions per
+operand pair.
+8. SPI Controller — Signal List
+A. External pins
+Signal
+
+Direction
+
+Width
+
+Description
+
+spi_sclk
+
+Output
+
+1
+
+Serial clock (core pin spi_clk_o )
+
+spi_mosi
+
+Output
+
+1
+
+Master out (core pin spi_mosi_o )
+
+spi_miso
+
+Input
+
+1
+
+Master in (core pin spi_miso_i )
+
+spi_cs_n
+
+Output
+
+1
+
+Active-low chip select (core pin spi_cs_n_o )
+
+B. AXI4-Lite slave port — standard interface, m07 , base 0x4000_5000 .
+C. Interrupt
+Signal
+
+Direction Source →
+Destination
+
+Width Description
+
+irq_spi
+
+Output
+
+1
+
+SPI → PIC
+
+RX data available / TX empty / mode fault (new
+— the reviewed core has no interrupt pin)
+
+Register map (base 0x4000_5000 ) — taken from the SPI core under review (Xilinx AXI
+Quad SPI style):
+
+Offset
+
+Name
+
+Access
+
+Description
+
+0x1C
+
+SPI_GIER
+
+R/W
+
+Global interrupt enable
+
+0x20
+
+SPI_ISR
+
+R/W (toggle on
+write in core)
+
+Interrupt status
+
+0x28
+
+SPI_IER
+
+R/W
+
+Interrupt enable
+
+0x30
+
+SPI_RCLK
+
+R/W
+
+Custom: SPI clock divider (clk : sclk = 2, 4, 8, 16 … by value)
+
+0x40
+
+SPI_SRR
+
+W
+
+Soft reset; write 0x0000_000A
+
+0x60
+
+SPI_CR
+
+R/W
+
+[1] enable, [2] master, [3] CPOL, [4] CPHA,
+[5] TX FIFO reset, [6] RX FIFO reset, [9] LSB first
+
+0x64
+
+SPI_SR
+
+R
+
+[0] RX empty, [1] RX full, [2] TX empty, [3] TX
+full, [4] MODF, [5] slave-mode-select
+
+0x68
+
+SPI_DTR
+
+W
+
+TX FIFO data (8-bit)
+
+0x6C
+
+SPI_DRR
+
+R
+
+RX FIFO data (8-bit)
+
+0x70
+
+SPI_SSR
+
+R/W
+
+Slave select (bit 0 used)
+
+0x74
+
+SPI_TFOR
+
+R
+
+TX FIFO occupancy
+
+0x78
+
+SPI_RFOR
+
+R
+
+RX FIFO occupancy
+
+Required modifications to the reviewed core (top level reviewed so far; sub-modules still
+to be reviewed)
+
+# Finding
+
+Required change
+
+1
+
+No interrupt output; GIER/ISR/IER are declared but
+"not implemented"
+
+Implement and add irq_spi
+
+2
+
+Write strobes: bytes with wstrb = 0 are written as
+zero instead of preserved
+
+Proper per-byte read-modify-write
+
+3
+
+Unknown offsets: writes return OKAY, reads return
+constant 0x61626364
+
+Return SLVERR
+
+4 Address decode uses only 7 bits → offsets ≥ 0x80 alias
+into the register map
+
+Decode the 12-bit window, SLVERR
+above 0x7F
+
+5
+
+Remove (AXI4-Lite has no IDs) or tie to
+0
+
+12-bit ID ports ( arid/awid/rid/bid )
+
+6 Two clocks ( fixed_clk_i , axi_aclk_i ) with a
+synchroniser between them
+
+Single clk ; remove the synchroniser
+
+7
+
+DRR read / DTR write are held until FIFO data/space
+is available (suspected stall on empty RX / full TX FIFO
+— to be verified)
+
+Never block the bus: return
+data/ SLVERR immediately; a blocked
+read would freeze the shared fabric
+
+8
+
+awready / wready only rise when AWVALID and
+WVALID are both present
+
+Acceptable per AXI; verify against the
+fabric in simulation
+
+9 Master-only SPI pins (one chip select); no slave mode
+
+External access needs the separate
+bridge of Decision D2
+
+9. UART — Signal List
+Signal
+
+Direction
+
+Width
+
+Description
+
+uart_tx
+
+Output
+
+1
+
+Serial transmit
+
+uart_rx
+
+Input
+
+1
+
+Serial receive
+
+Standard AXI4-Lite slave port
+
+—
+
+19
+
+m02 , base 0x4000_0000
+
+irq_uart
+
+Output
+
+1
+
+TX empty / RX valid interrupt to PIC
+
+The provided AXI-Lite UART core uses axi_*_i/_o names, active-low axi_aresetn_i , a
+fixed_clk_i , and 12-bit ID ports; it needs a thin renaming wrapper and the same ID/clock
+clean-up as the SPI core.
+
+Register map (base 0x4000_0000 ) — project-defined; adapt the core's layout or wrap it.
+Offset
+
+Name
+
+Access
+
+Description
+
+0x00
+
+UART_CTRL
+
+R/W
+
+[0] enable, [1] irq enable, [15:4] baud divisor
+
+0x04
+
+UART_STATUS
+
+R
+
+[0] tx_ready, [1] rx_valid, [2] overrun
+
+0x08
+
+UART_TXDATA
+
+W
+
+Byte to transmit
+
+0x0C
+
+UART_RXDATA
+
+R
+
+Received byte
+
+10. Timer — Signal List
+Signal
+
+Direction
+
+Width
+
+Description
+
+Standard AXI4-Lite slave port
+
+—
+
+19
+
+m03 , base 0x4000_1000
+
+irq_timer
+
+Output
+
+1
+
+Compare match / periodic interrupt
+
+Offset
+
+Name
+
+Access
+
+Description
+
+0x00
+
+TIMER_CTRL
+
+R/W
+
+[0] enable, [1] periodic, [2] irq enable
+
+0x04
+
+TIMER_COUNT
+
+R
+
+Free-running counter
+
+0x08
+
+TIMER_COMPARE
+
+R/W
+
+Compare / reload value
+
+0x0C
+
+TIMER_STATUS
+
+R/W1C
+
+[0] match flag
+
+11. GPIO — Signal List
+Signal
+
+Direction
+
+Width
+
+Description
+
+gpio_in[N-1:0]
+
+Input
+
+N
+
+External inputs (manual job trigger, etc.)
+
+gpio_out[N-1:0]
+
+Output
+
+N
+
+Status / error indicators
+
+Standard AXI4-Lite slave port
+
+—
+
+19
+
+m04 , base 0x4000_2000
+
+irq_gpio
+
+Output
+
+1
+
+Edge interrupt from enabled inputs
+
+Offset
+
+Name
+
+Access
+
+Description
+
+0x00
+
+GPIO_DIR
+
+R/W
+
+Output-enable mask
+
+0x04
+
+GPIO_OUT
+
+R/W
+
+Drives gpio_out
+
+0x08
+
+GPIO_IN
+
+R
+
+Reads gpio_in
+
+0x0C
+
+GPIO_INT_EN
+
+R/W
+
+Per-bit edge-interrupt enable
+
+0x10
+
+GPIO_INT_STATUS
+
+R/W1C
+
+Latched edge flags
+
+N defaults to 8 (not specified in the abstract).
+
+12. Interrupt Controller (VeeR PIC) — Signal List
+The PIC is part of the core complex; its configuration registers are reached through the core,
+not through the AXI4-Lite fabric.
+Signal
+
+Direction
+
+Width
+
+Description
+
+irq_acc
+
+Input
+
+1
+
+Accelerator (source 1)
+
+irq_dma
+
+Input
+
+1
+
+DMA (source 2)
+
+irq_spi
+
+Input
+
+1
+
+SPI (source 3)
+
+irq_uart
+
+Input
+
+1
+
+UART (source 4)
+
+irq_timer
+
+Input
+
+1
+
+Timer (source 5)
+
+irq_gpio
+
+Input
+
+1
+
+GPIO (source 6)
+
+External interrupt output → VeeR
+
+Output
+
+N*
+
+Per PIC configuration
+
+13. SPI Bridge for External Access (Decision D2, option A) — Signal List
+Only if option A is chosen: SPI slave pins plus a fabric master port s03 .
+
+Signal
+
+Direction Width Description
+
+spi_sclk , spi_mosi ,
+spi_cs_n
+
+Input
+
+1 each
+
+External host drives (separate from the master
+pins in §8, or muxed)
+
+spi_miso
+
+Output
+
+1
+
+Data to the host
+
+Standard AXI4-Lite master
+port
+
+—
+
+19
+
+Connected to s03_axil_*
+
+Frame (proposed): {R/W, 31-bit address, 32-bit data} ; the bridge issues one AXI4Lite transaction and returns status + read data in the following frame. Permissions for s03 :
+read/write ACC ( m05 ), read DMEM ( m01 ).
+
+MEMORY MAP
+Region
+
+Port
+
+Base Address
+
+Size
+
+Instruction Memory
+
+m00
+
+0x0000_0000
+
+64 KB
+
+Data Memory
+
+m01
+
+0x1000_0000
+
+64 KB
+
+UART
+
+m02
+
+0x4000_0000
+
+4 KB
+
+Timer
+
+m03
+
+0x4000_1000
+
+4 KB
+
+GPIO
+
+m04
+
+0x4000_2000
+
+4 KB
+
+Arithmetic Accelerator
+
+m05
+
+0x4000_3000
+
+4 KB
+
+DMA Controller
+
+m06
+
+0x4000_4000
+
+4 KB
+
+SPI Controller
+
+m07
+
+0x4000_5000
+
+4 KB
+
+Any other address (for example 0x2000_0000 ) returns DECERR from the interconnect.
+
+CONTROL PATH
+1. Purpose
+The control path carries configuration, commands and status between the RISC-V core and
+the accelerator, DMA, UART, Timer, GPIO and SPI. It is physically the same fabric as the
+data path's memory traffic but carries only a handful of register accesses per job.
+
+VeeR EL2 LSU (AHB-Lite 64-bit)
+│
+LSU bridge (AHB → AXI4-Lite, 64→32)
+│ s01_axil_*
+AXI4-Lite Interconnect (decode, arbitrate, permission check)
+│ m02…m07_axil_*
+┌─┴───┬──────┬──────┬──────┬──────┬──────┐
+UART Timer GPIO ACC DMA SPI
+(registers)
+
+2. Control Path Architecture
+Write: RISC-V store → LSU bridge → s01 AW + W → fabric (grant, decode,
+permission) → mNN AW + W → register written → mNN B → s01 B → bridge → hready .
+Read: RISC-V load → LSU bridge → s01 AR → fabric → mNN AR → mNN R (rdata,
+rresp) → s01 R → bridge → hrdata . A register access takes several clocks (arbitration +
+decode + slave response); the core stalls via hready .
+
+3. Memory-Mapped Control
+All peripherals are accessed with ordinary loads/stores at the addresses in the Memory
+Map. The upper address bits select the slave in the fabric; the low 12 bits select the register
+inside the slave.
+4. Peripheral Register Access
+Only the LSU master ( s01 ) can reach peripherals. An IFU or DMA access to a peripheral
+address returns DECERR, which the bridge turns into an AHB error (core trap) — this
+catches wild pointers and DMA misprogramming.
+5. System Initialization and Control Sequence
+Reset released (rst_n high → rst low)
+→ firmware starts from IMEM 0x0000_0000
+→ initialise UART (baud), Timer, GPIO, SPI, PIC
+→ write operand pairs A0,B0,A1,B1,… into DMEM
+→ ACC_OPCOUNT = N, ACC_CTRL.opcode = op, ACC_IRQ_EN = 1
+→ DMA_SRC_ADDR, DMA_DST_ADDR, DMA_LENGTH = N, DMA_CTRL = start | irq_en
+→ (CPU free to do other work or wait for interrupt)
+→ irq → ISR: read DMA_STATUS / ACC_STATUS, read results from DMEM, UART
+log, GPIO update
+
+6. UART Control
+RISC-V → UART_CTRL (enable, baud) → UART_TXDATA → serial out ; polled via
+UART_STATUS or interrupt-driven. Used for logging only.
+
+7. Timer Control
+TIMER_COMPARE , TIMER_CTRL.enable → counter → match → irq_timer . Reading
+TIMER_COUNT at job start and end gives job duration; periodic mode can auto-trigger jobs.
+
+8. GPIO Control
+GPIO_DIR , GPIO_OUT drive status/error LEDs; gpio_in edges (manual trigger) raise
+irq_gpio .
+
+9. SPI Controller Control
+CPU-driven SPI master: SPI_RCLK (divider) → SPI_CR (enable, master, CPOL/CPHA) →
+SPI_SSR (select) → SPI_DTR writes → wait on SPI_SR / irq_spi → SPI_DRR reads.
+External host access follows Decision D2.
+10. Arithmetic Accelerator Control
+ACC_CTRL (opcode) + ACC_OPCOUNT → armed. The job starts when the DMA delivers the
+first operand pair (or via ACC_CTRL.start in direct mode). FSM: IDLE → CONFIG → RUN →
+DRAIN → DONE .
+
+11. DMA Controller Control
+DMA_SRC_ADDR , DMA_DST_ADDR , DMA_LENGTH , then DMA_CTRL.start . After that the DMA
+runs on its own master port and the dedicated stream until DMA_STATUS.done or an error.
+
+12. Accelerator / DMA Coordination
+dma_op_valid/ready governs operands into the accelerator, dma_res_valid/ready
+governs results back, dma_last tags the final pair so the accelerator drains and signals
+
+completion. The DMA keeps a small result FIFO so a stalled fabric write cannot deadlock
+the accelerator pipeline.
+13. Status Monitoring
+ACC_STATUS , DMA_STATUS (+ DMA_ERR_ADDR ), SPI_SR , UART_STATUS , TIMER_STATUS are
+
+pollable at any time.
+14. Interrupt-Based Control
+event (done / error / RX / match / edge)
+→ irq_xxx → PIC (mask, priority) → VeeR external interrupt
+→ ISR identifies source, services it, clears the flag (W1C / read-clear),
+returns
+
+15. Complete Control Path
+Configuration and status: VeeR → LSU bridge → fabric → register bank . Events return
+on the interrupt wires, not on the bus.
+
+DATA PATH
+1. Purpose
+The data path moves operand and result words. Memory traffic uses the same AXI4-Lite
+fabric (DMA is a master); the operand/result stream between DMA and accelerator is a
+dedicated link.
+2. Operand Path
+DMEM operand block
+→ fabric (m01 read, DMA = s02) → DMA
+→ dedicated stream (dma_op_*) → Arithmetic Accelerator (pipelined ALU)
+→ dedicated stream (dma_res_*) → DMA result FIFO
+→ fabric (m01 write, DMA = s02) → DMEM result block
+
+3. Data Width Progression
+32-bit everywhere (fabric, stream, registers). To decide before the ALU is coded: MAC
+accumulation may need a wider internal accumulator (e.g. 64-bit) with the low word visible
+in ACC_ACC_REG ; the high word can be a second register ( ACC_ACC_HI ) to avoid silent
+overflow.
+4. Streaming vs. Stored Data
+Words are streamed one at a time between DMA and accelerator (valid/ready) and stored in
+DMEM at both ends. The accelerator keeps no persistent operand/result storage beyond its
+pipeline.
+5. External Access Path via SPI
+External host → spi_sclk / mosi / miso / cs_n → SPI bridge (D2 option A) →
+s03 master port
+→ fabric → ACC registers (m05) or DMEM (m01) → response → frame back to
+host
+
+6. Role of RISC-V in the Data Path
+The core never touches data during a DMA job. It writes the operand block beforehand and
+reads the result block afterwards (through the same LSU path, sharing fabric time with the
+DMA).
+7. Data Path and Control Path Interaction
+Because the fabric serialises one transaction at a time, DMA traffic delays CPU accesses and
+vice versa. Each operand pair costs 3 fabric transactions plus slave latency, so DMA
+throughput is bounded by roughly 1 / (3 × transaction latency) pairs per cycle — measure
+this in simulation and compare against the CPU-only software baseline to demonstrate the
+
+speed-up. AXI4-Lite has no bursts, so there is no way to amortise address overhead; that is
+the cost of choosing AXI4-Lite over full AXI4.
+8. Data Path Design Requirements
+Accelerator accepts a new operand pair every cycle when dma_op_ready is high (true
+pipelining).
+dma_last must make the accelerator drain exactly the in-flight pairs before done .
+DMA result FIFO depth ≥ accelerator pipeline depth + 2 to avoid deadlock under
+fabric contention.
+Divide-by-zero sets ACC_STATUS.error , produces a defined result (e.g. all ones), and
+must not hang the stream.
+Any non-OKAY response on the DMA master port aborts the job, sets
+DMA_STATUS.error and DMA_ERR_ADDR .
+Operand and result blocks must lie inside DMEM and be word aligned
+(misaligned/out-of-range → DECERR/SLVERR → job abort).
+
+DESIGN REQUIREMENTS SUMMARY
+1. Every AXI4-Lite slave must always respond (OKAY, SLVERR for bad offsets). No
+blocking reads/writes — the shared fabric has no timeout, so one stuck slave freezes
+the whole SoC.
+2. All slaves must tolerate AW and W arriving in different cycles/order, honour wstrb ,
+and hold rvalid / bvalid until accepted.
+3. Single clock clk ; reset is active-low rst_n outside, active-high rst = ~rst_n at
+the interconnect.
+4. Bridges must convert 64-bit ↔ 32-bit, map non-OKAY responses to AHB errors, and
+never lose the AHB pipeline address.
+5. Permissions are enforced by the fabric (see matrix); firmware must not write IMEM or
+reach peripherals from IFU/DMA.
+6. DMA is a single-beat master; its throughput must be characterised and reported.
+7. The reused UART/SPI cores need the modifications listed (IDs, clocks, interrupts,
+strobes, error responses).
+8. Verification: unit testbench per IP, fabric regression (already complete), system test
+running real firmware on VeeR with UART output check, DMA job end-to-end, and
+the SPI external-access path.
+
+OPEN ITEMS REQUIRING CONFIRMATION
+1. Decision D2 — SPI external access: option A (SPI bridge as 4th master, 4×8 fabric) or
+option B (shadow registers).
+
+2. Core bus type — is your provided VeeR EL2 built with AHB-Lite (assumed) or AXI4?
+(changes only the bridge).
+3. PIC configuration — number/encoding of interrupt inputs actually instantiated (spec
+assumes 6).
+4. MAC accumulator width and overflow/saturation behaviour.
+5. GPIO width N (assumed 8) and UART register layout (adapt the provided core's, or
+use the map above).
+6. Remaining SPI core review — spi_ctrl , spi_fifo , spi_exch_byte , ratio_clk ,
+spi_clk_gen , spi_valid_logic , axi_spi_ctrl have not been reviewed yet; finding
+#7 (blocking FIFO access) must be confirmed.
+
+

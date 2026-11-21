@@ -1,0 +1,75 @@
+SNo.,Test Name,Description,Checkpoints,C Test Output,C Test Expected Output,SV Test Output,SV Test Expected Output,,,,,,,,,,,,,,,,,,
+TC-01,Reset and CPU Boot,Verify reset initializes the SoC and VeeR EL2 begins executing firmware from the configured reset address.,"• Reset asserted/released correctly; 
+• first fetch at configured reset address; 
+• PC/fetch activity progresses; 
+• boot marker appears within bounded timeout.",Not Run,Firmware reaches boot marker and reports successful startup within timeout.,Not Run,Reset and first fetch are correct; CPU progresses; no boot timeout.
+TC-02,Instruction-Memory Preload and Execution,Verify intended firmware image is loaded into instruction memory before reset release and can be fetched by the CPU.,"• Confirm image architecture and memory layout; 
+• preload correct instruction-memory instance; 
+• inspect representative locations before reset release; 
+• observe fetches from preloaded region; 
+• flag missing or out-of-range image data.",N/A,Setup test rather than standalone C functional test; firmware image is the input.,Not Run,Correct image is present before reset release and CPU fetches expected locations.
+TC-03,Data-Memory Read/Write,Verify CPU-visible data-memory writes and reads using known aligned values.,"• Write known values; 
+• AXI write handshakes complete; 
+• correct memory locations update; 
+• read values back; compare values; 
+• bound all waits.",Not Run,Every readback matches the written value; no timeout or bus error.,Not Run,Transactions target expected addresses; handshakes complete; memory contents and readback match.
+TC-04,CPU AXI Read/Write and Address Decoding,Verify a CPU-initiated AXI transaction reaches the intended target and returns the expected response/data.,"• Use confirmed valid address; 
+• check address/control stability; 
+• confirm target decode; 
+• check relevant AXI handshakes; 
+• check response/data/side effect; 
+• test invalid address only if defined by RTL.",Not Run,Firmware access completes and observes expected readback or side effect without bus error.,Not Run,"Correct routing, valid AXI handshakes/responses, and expected data or side effect."
+TC-05,UART Initialization and Transmission,Verify firmware configures UART and transmits a short known status message.,"•  Confirm RTL register map; 
+• configuration writes accepted; 
+• TX writes accepted; 
+• check start/data/stop timing; 
+• decode expected characters; 
+• bound TX-ready polling.",Not Run,UART initializes and transmits expected message without timeout/error.,Not Run,Register accesses route correctly and TX waveform decodes to expected characters.
+TC-06,GPIO Register Write/Readback,Verify firmware writes a known GPIO output pattern and reads it back if supported.,"• Confirm register map/readback support; 
+• write known pattern (e.g. 0x5); 
+• check response; 
+• verify output pins accounting for width/polarity; 
+• compare readback only if supported.",Not Run,Output matches programmed pattern; supported readback matches.,Not Run,GPIO transaction completes and pins/readback reflect expected pattern.
+TC-07,Timer Basic Operation,Verify a basic timer operation using features confirmed in the integrated timer RTL.,"• Confirm register map and count/status semantics; 
+• program supported count/reload; 
+• enable timer; 
+• observe count/status transition; 
+• poll with finite timeout.",Not Run,Expected timer status/count condition occurs within timeout.,Not Run,Register transactions complete and timer behavior matches RTL specification.
+TC-08,ADC Interface Register Access and Sample Capture,Verify ADC-interface configuration/status and sample capture using the actual digital interface supported by RTL.,"• Confirm register map and sample interface; 
+• configure supported fields; 
+• drive legal digital sample stimulus if available; 
+• observe capture; 
+• read documented sample/status; 
+• account for width and signedness; 
+• bounded polling.",Not Run,Firmware observes expected sample/status for applied stimulus.,Not Run,Configuration and capture transactions are correct; captured value/status matches expected representation.
+TC-09,FIR Configuration and Basic Operation,"Verify supported FIR configuration and, if possible, output for a deterministic input vector.","• Confirm register map, coefficients, data interface, fixed-point format; 
+• configure FIR; 
+• if data path is exercisable, apply vector; 
+• check handshakes; 
+• compare output with independent reference using documented arithmetic; 
+• otherwise mark functional filtering Blocked/N/A.",Not Run,"Configuration/status is correct; if functional interface is available, output matches reference.",Not Run,Register transactions and available data handshakes are correct; output matches reference where testable.
+TC-10,"FFT Start, Completion, and Result Check",Verify FFT configuration/start/completion and selected result bins if supported by actual RTL.,"• Confirm registers, buffer layout, transform length, widths, scaling and bin order; 
+• load deterministic vector through supported interface; 
+• start; 
+• bounded completion poll; 
+• check status semantics; 
+• compare selected bins with independent reference.",Not Run,FFT completes within timeout and selected bins match reference under confirmed arithmetic/order.,Not Run,Start/completion and result transactions are correct; selected bins match reference.
+TC-11,DSP Data-Path Connectivity,"Determine whether samples actually transfer through ADC interface → FIR → FFT, independently of register access.","• Identify actual boundary signals; 
+• apply traceable input samples; 
+• observe samples at FIR input and FFT input; 
+• check order and valid/ready; 
+• document disconnected/tied-off/undriven boundaries as Blocked or Fail per criterion.",N/A,Software register access alone cannot prove streaming connectivity.,Not Run,"Waveform shows traceable samples crossing ADC interface → FIR → FFT with correct handshakes, or identifies the exact missing connection."
+TC-12,Firmware Completion and Timeout/Error Reporting,Verify firmware reaches a terminal result and reports errors/timeouts without hanging.,"• Execute tests in order; 
+• observe UART/status marker; 
+• ensure every poll is bounded; 
+• exercise supported error/timeout case where feasible; 
+• confirm failure is not silently reported as success; 
+• enforce global simulation bound.",Not Run,Firmware reports a clear terminal result and does not hang on exercised conditions.,Not Run,Testbench observes terminal status; timeout/error behavior is bounded and correctly reported.
+TC-13,End-to-End Spectrum Analysis,"Apply a known digital sample sequence, process it through ADC interface → FIR → FFT, and verify CPU-visible spectrum results.","• Confirm complete path exists in RTL; 
+• apply deterministic input; 
+• verify traversal through all DSP stages; 
+• check FFT completion within timeout; 
+• compare selected bins with independent reference accounting for fixed-point arithmetic/order; 
+• verify CPU readback; 
+• retain VCS log and waveform evidence; 
+• if path/interface is missing or unconfirmed, mark Blocked.",Not Run,Known input traverses intended chain; checked spectrum bins match independent reference; completion and CPU readback succeed without timeout.,Not Run,"Log/waveform proves full ADC interface → FIR → FFT path, completion, result transfer and CPU-visible spectrum readback matching reference."

@@ -1,0 +1,59 @@
+Command: /home/student/Downloads/Honours project/Project/testbench/vips/spi_vip/./simv_spi -l spi_sim_run.log
+Chronologic VCS simulator copyright 1991-2023
+Contains Synopsys proprietary information.
+Compiler version U-2023.03_Full64; Runtime version U-2023.03_Full64;  Nov  7 14:48 2026
+----------------------------------------------------------------
+UVM-1.1d.Synopsys
+(C) 2007-2013 Mentor Graphics Corporation
+(C) 2007-2013 Cadence Design Systems, Inc.
+(C) 2006-2013 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_NO_DEPRECATED undefined.
+  See http://www.eda.org/svdb/view.php?id=3313 for more details.
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_OBJECT_MUST_HAVE_CONSTRUCTOR undefined.
+  See http://www.eda.org/svdb/view.php?id=3770 for more details.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+UVM_INFO @ 0: reporter [RNTST] Running test spi_test...
+UVM_INFO spi_test.sv(28) @ 0: uvm_test_top [SPI_TEST] Executing SPI VIP Functional Verification Test...
+UVM_INFO spi_seq.sv(112) @ 0: uvm_test_top.env.agent.seqr@@seq [SPI_SEQ] Starting SPI Smoke Sequence...
+UVM_INFO spi_driver.sv(87) @ 20000: uvm_test_top.env.agent.drv [SPI_DRV] Updated SPI slave response byte to: 0xa5
+UVM_INFO spi_seq.sv(24) @ 20000: uvm_test_top.env.agent.seqr@@seq.slave_seq [SPI_SEQ] Configured SPI slave model with response byte 0xA5
+UVM_INFO spi_monitor.sv(59) @ 445000: uvm_test_top.env.agent.mon [SPI_MON] Monitored SPI 8-bit frame: MOSI=0x3c, MISO=0xa5
+UVM_INFO spi_scoreboard.sv(42) @ 445000: uvm_test_top.env.sb [SPI_SB] [SCOREBOARD MATCH] Monitored MOSI byte 0x3c matches expected 0x3c
+UVM_INFO spi_scoreboard.sv(57) @ 445000: uvm_test_top.env.sb [SPI_SB] [SCOREBOARD MATCH] Monitored MISO response 0xa5 matches expected 0xa5
+UVM_INFO spi_seq.sv(87) @ 1835000: uvm_test_top.env.agent.seqr@@seq.master_seq [SPI_SEQ] Read SPI_DRR returned received byte: 0x00
+UVM_INFO spi_seq.sv(115) @ 1895000: uvm_test_top.env.agent.seqr@@seq [SPI_SEQ] SPI Smoke Sequence completed successfully.
+UVM_INFO spi_test.sv(37) @ 3895000: uvm_test_top [SPI_TEST] SPI VIP Test Finished.
+UVM_INFO /home/student/snps_tools_target/vcs/U-2023.03/etc/uvm/base/uvm_objection.svh(1274) @ 3895000: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+UVM_INFO spi_scoreboard.sv(70) @ 3895000: uvm_test_top.env.sb [SPI_SB] SPI Scoreboard Summary: 2 Matches, 0 Mismatches
+
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO :   13
+UVM_WARNING :    0
+UVM_ERROR :    0
+UVM_FATAL :    0
+** Report counts by id
+[RNTST]     1
+[SPI_DRV]     1
+[SPI_MON]     1
+[SPI_SB]     3
+[SPI_SEQ]     4
+[SPI_TEST]     2
+[TEST_DONE]     1
+$finish called from file "/home/student/snps_tools_target/vcs/U-2023.03/etc/uvm/base/uvm_root.svh", line 437.
+$finish at simulation time              3895000
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 3895000 ps
+CPU Time:      0.140 seconds;       Data structure size:   0.3Mb
+Sat Nov  7 14:48:56 2026

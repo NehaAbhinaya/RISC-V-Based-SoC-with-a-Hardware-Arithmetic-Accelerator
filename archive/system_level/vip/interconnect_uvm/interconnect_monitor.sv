@@ -1,0 +1,10 @@
+class interconnect_monitor extends uvm_monitor;
+  virtual interconnect_if vif;
+  uvm_analysis_port #(interconnect_item) ap;
+  `uvm_component_utils(interconnect_monitor)
+  function new(string n, uvm_component p); super.new(n, p); ap = new("ap", this); endfunction
+  function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+    void'(uvm_config_db#(virtual interconnect_if)::get(this, "", "vif", vif));
+  endfunction
+endclass

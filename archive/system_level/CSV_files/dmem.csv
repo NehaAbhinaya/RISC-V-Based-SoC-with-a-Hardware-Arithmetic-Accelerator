@@ -1,0 +1,22 @@
+signal_name,direction,width,interface_group,description,testcase_mapping
+clk,input,1,Clock & Reset,100 MHz primary system clock,"TC-01, TC-03"
+rst_n,input,1,Clock & Reset,Active-low system reset,"TC-01, TC-03"
+awaddr,input,32,AXI4-Lite Write Address,Data memory write address (bits [15:2] decoded),"TC-03, TC-10, TC-11, TC-14"
+awprot,input,3,AXI4-Lite Write Address,Protection attributes,TC-03
+awvalid,input,1,AXI4-Lite Write Address,Write address valid from interconnect port m01,"TC-03, TC-10, TC-11, TC-14"
+awready,output,1,AXI4-Lite Write Address,Write address ready credit from DMEM,"TC-03, TC-10, TC-11, TC-14"
+wdata,input,32,AXI4-Lite Write Data,32-bit write data payload,"TC-03, TC-10, TC-11, TC-14"
+wstrb,input,4,AXI4-Lite Write Data,"Byte-lane write enables ([0]=7:0, [1]=15:8, [2]=23:16, [3]=31:24)","TC-03, TC-14"
+wvalid,input,1,AXI4-Lite Write Data,Write data valid handshake strobe,"TC-03, TC-10, TC-11, TC-14"
+wready,output,1,AXI4-Lite Write Data,Write data ready credit from DMEM,"TC-03, TC-10, TC-11, TC-14"
+bresp,output,2,AXI4-Lite Write Response,Write response code (2b00 = AXI_OKAY),"TC-03, TC-10, TC-11, TC-14"
+bvalid,output,1,AXI4-Lite Write Response,Write response valid handshake strobe,"TC-03, TC-10, TC-11, TC-14"
+bready,input,1,AXI4-Lite Write Response,Write response ready credit from master,"TC-03, TC-10, TC-11, TC-14"
+araddr,input,32,AXI4-Lite Read Address,Data memory read address (bits [15:2] decoded),"TC-03, TC-10, TC-11, TC-14"
+arprot,input,3,AXI4-Lite Read Address,Protection attributes,TC-03
+arvalid,input,1,AXI4-Lite Read Address,Read address valid from interconnect port m01,"TC-03, TC-10, TC-11, TC-14"
+arready,output,1,AXI4-Lite Read Address,Read address ready credit from DMEM,"TC-03, TC-10, TC-11, TC-14"
+rdata,output,32,AXI4-Lite Read Data,32-bit memory readback data word,"TC-03, TC-10, TC-11, TC-14"
+rresp,output,2,AXI4-Lite Read Data,Read response code (2b00 = AXI_OKAY),"TC-03, TC-10, TC-11, TC-14"
+rvalid,output,1,AXI4-Lite Read Data,Read data valid handshake strobe,"TC-03, TC-10, TC-11, TC-14"
+rready,input,1,AXI4-Lite Read Data,Read data ready credit from master,"TC-03, TC-10, TC-11, TC-14"

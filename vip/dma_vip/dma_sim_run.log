@@ -1,0 +1,81 @@
+Command: /home/student/Downloads/Honours project/Project/testbench/vips/dma_vip/./simv_dma -l dma_sim_run.log
+Chronologic VCS simulator copyright 1991-2023
+Contains Synopsys proprietary information.
+Compiler version U-2023.03_Full64; Runtime version U-2023.03_Full64;  Nov  7 14:47 2026
+----------------------------------------------------------------
+UVM-1.1d.Synopsys
+(C) 2007-2013 Mentor Graphics Corporation
+(C) 2007-2013 Cadence Design Systems, Inc.
+(C) 2006-2013 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_NO_DEPRECATED undefined.
+  See http://www.eda.org/svdb/view.php?id=3313 for more details.
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_OBJECT_MUST_HAVE_CONSTRUCTOR undefined.
+  See http://www.eda.org/svdb/view.php?id=3770 for more details.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+UVM_INFO @ 0: reporter [RNTST] Running test dma_test...
+UVM_INFO dma_test.sv(28) @ 0: uvm_test_top [DMA_TEST] Executing DMA VIP Functional Verification Test...
+UVM_INFO dma_seq.sv(22) @ 0: uvm_test_top.env.agent.seqr@@seq [DMA_SEQ] Starting DMA Smoke Configuration Sequence...
+UVM_INFO dma_driver.sv(69) @ 20000: uvm_test_top.env.agent.drv [DMA_DRV] Programming DMA: SRC=0x10000100, DST=0x10000200, LEN=4, CTRL=0x00000003
+UVM_INFO dma_monitor.sv(66) @ 245000: uvm_test_top.env.agent.mon [DMA_MON] Monitored DMA Master Read from DMEM: Addr=0x10000100
+UVM_INFO dma_scoreboard.sv(40) @ 245000: uvm_test_top.env.sb [DMA_SB] [SCOREBOARD MATCH] DMA fetched operand from source DMEM: Addr=0x10000100
+UVM_INFO dma_monitor.sv(66) @ 265000: uvm_test_top.env.agent.mon [DMA_MON] Monitored DMA Master Read from DMEM: Addr=0x10000104
+UVM_INFO dma_scoreboard.sv(40) @ 265000: uvm_test_top.env.sb [DMA_SB] [SCOREBOARD MATCH] DMA fetched operand from source DMEM: Addr=0x10000104
+UVM_INFO dma_monitor.sv(57) @ 305000: uvm_test_top.env.agent.mon [DMA_MON] Monitored DMA Master Write to DMEM: Addr=0x10000200
+UVM_INFO dma_scoreboard.sv(35) @ 305000: uvm_test_top.env.sb [DMA_SB] [SCOREBOARD MATCH] DMA wrote valid result to destination DMEM: Addr=0x10000200
+UVM_INFO dma_monitor.sv(66) @ 325000: uvm_test_top.env.agent.mon [DMA_MON] Monitored DMA Master Read from DMEM: Addr=0x10000108
+UVM_INFO dma_scoreboard.sv(40) @ 325000: uvm_test_top.env.sb [DMA_SB] [SCOREBOARD MATCH] DMA fetched operand from source DMEM: Addr=0x10000108
+UVM_INFO dma_monitor.sv(66) @ 345000: uvm_test_top.env.agent.mon [DMA_MON] Monitored DMA Master Read from DMEM: Addr=0x1000010c
+UVM_INFO dma_scoreboard.sv(40) @ 345000: uvm_test_top.env.sb [DMA_SB] [SCOREBOARD MATCH] DMA fetched operand from source DMEM: Addr=0x1000010c
+UVM_INFO dma_monitor.sv(57) @ 385000: uvm_test_top.env.agent.mon [DMA_MON] Monitored DMA Master Write to DMEM: Addr=0x10000204
+UVM_INFO dma_scoreboard.sv(35) @ 385000: uvm_test_top.env.sb [DMA_SB] [SCOREBOARD MATCH] DMA wrote valid result to destination DMEM: Addr=0x10000204
+UVM_INFO dma_monitor.sv(66) @ 405000: uvm_test_top.env.agent.mon [DMA_MON] Monitored DMA Master Read from DMEM: Addr=0x10000110
+UVM_INFO dma_scoreboard.sv(40) @ 405000: uvm_test_top.env.sb [DMA_SB] [SCOREBOARD MATCH] DMA fetched operand from source DMEM: Addr=0x10000110
+UVM_INFO dma_monitor.sv(66) @ 425000: uvm_test_top.env.agent.mon [DMA_MON] Monitored DMA Master Read from DMEM: Addr=0x10000114
+UVM_INFO dma_scoreboard.sv(40) @ 425000: uvm_test_top.env.sb [DMA_SB] [SCOREBOARD MATCH] DMA fetched operand from source DMEM: Addr=0x10000114
+UVM_INFO dma_monitor.sv(57) @ 465000: uvm_test_top.env.agent.mon [DMA_MON] Monitored DMA Master Write to DMEM: Addr=0x10000208
+UVM_INFO dma_scoreboard.sv(35) @ 465000: uvm_test_top.env.sb [DMA_SB] [SCOREBOARD MATCH] DMA wrote valid result to destination DMEM: Addr=0x10000208
+UVM_INFO dma_monitor.sv(66) @ 485000: uvm_test_top.env.agent.mon [DMA_MON] Monitored DMA Master Read from DMEM: Addr=0x10000118
+UVM_INFO dma_scoreboard.sv(40) @ 485000: uvm_test_top.env.sb [DMA_SB] [SCOREBOARD MATCH] DMA fetched operand from source DMEM: Addr=0x10000118
+UVM_INFO dma_monitor.sv(66) @ 505000: uvm_test_top.env.agent.mon [DMA_MON] Monitored DMA Master Read from DMEM: Addr=0x1000011c
+UVM_INFO dma_scoreboard.sv(40) @ 505000: uvm_test_top.env.sb [DMA_SB] [SCOREBOARD MATCH] DMA fetched operand from source DMEM: Addr=0x1000011c
+UVM_INFO dma_monitor.sv(57) @ 545000: uvm_test_top.env.agent.mon [DMA_MON] Monitored DMA Master Write to DMEM: Addr=0x1000020c
+UVM_INFO dma_scoreboard.sv(35) @ 545000: uvm_test_top.env.sb [DMA_SB] [SCOREBOARD MATCH] DMA wrote valid result to destination DMEM: Addr=0x1000020c
+UVM_INFO dma_monitor.sv(46) @ 565000: uvm_test_top.env.agent.mon [DMA_MON] Monitored DMA IRQ transition: irq_dma = 1
+UVM_INFO dma_scoreboard.sv(30) @ 565000: uvm_test_top.env.sb [DMA_SB] [SCOREBOARD MATCH] DMA completion interrupt verified (irq_dma=1)
+UVM_INFO dma_seq.sv(47) @ 3805000: uvm_test_top.env.agent.seqr@@seq [DMA_SEQ] Read DMA_STATUS = 0x00000002 (done bit = 1)
+UVM_INFO dma_seq.sv(48) @ 3805000: uvm_test_top.env.agent.seqr@@seq [DMA_SEQ] DMA Configuration Sequence finished.
+UVM_INFO dma_test.sv(34) @ 4805000: uvm_test_top [DMA_TEST] DMA VIP Test Finished.
+UVM_INFO /home/student/snps_tools_target/vcs/U-2023.03/etc/uvm/base/uvm_objection.svh(1274) @ 4805000: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+UVM_INFO dma_scoreboard.sv(46) @ 4805000: uvm_test_top.env.sb [DMA_SB] DMA Scoreboard Summary: 13 Matches, 0 Mismatches
+
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO :   35
+UVM_WARNING :    0
+UVM_ERROR :    0
+UVM_FATAL :    0
+** Report counts by id
+[DMA_DRV]     1
+[DMA_MON]    13
+[DMA_SB]    14
+[DMA_SEQ]     3
+[DMA_TEST]     2
+[RNTST]     1
+[TEST_DONE]     1
+$finish called from file "/home/student/snps_tools_target/vcs/U-2023.03/etc/uvm/base/uvm_root.svh", line 437.
+$finish at simulation time              4805000
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 4805000 ps
+CPU Time:      0.130 seconds;       Data structure size:   0.3Mb
+Sat Nov  7 14:47:45 2026

@@ -1,0 +1,73 @@
+# ============================================================
+# .gitignore for RISC-V SoC with Hardware Arithmetic Accelerator
+# Vasavi College of Engineering — R. Neha Abhinaya (1602-23-735-160)
+# ============================================================
+
+# ── Synopsys VCS Simulation Outputs ──────────────────────────
+simv
+simv.daidir/
+csrc/
+*.key
+vc_hdrs.h
+ucli.key
+vcs_*.log
+inter.vpd
+
+# ── Simulation Logs (keep VCS logs in archive; ignore transient ones) ──
+# (Uncomment next line to also ignore ALL .log files)
+# *.log
+
+# ── Waveform Databases ───────────────────────────────────────
+*.vcd
+*.fsdb
+*.vpd
+*.shm/
+*.trn
+*.dsn
+*.wlf
+
+# ── Verdi / Novas ────────────────────────────────────────────
+novas.rc
+novas.conf
+*.verdiLog/
+verdi_*.log
+urgReport/
+
+# ── Build / Object Files ─────────────────────────────────────
+*.o
+*.a
+*.d
+*.lst
+
+# ── Firmware Build Outputs ───────────────────────────────────
+*.elf
+*.bin
+*.dis
+# Keep *.hex files (needed for simulation loading)
+# *.hex
+
+# ── Python Cache ─────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# ── Editor / OS Temporaries ──────────────────────────────────
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+*.bak
+*.orig
+
+# ── Temp / Scratch ───────────────────────────────────────────
+/tmp/
+scratch/
+*.tmp
+
+# ── C Compilation Intermediates ──────────────────────────────
+*.i
+*.s

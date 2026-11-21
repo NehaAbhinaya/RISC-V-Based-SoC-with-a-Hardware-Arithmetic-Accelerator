@@ -1,0 +1,139 @@
+SNo.,Test Name,Description,Internal Testcases,External Testcases,Interface Required for External Testcases,Checkpoints,C Test Output,C Test Expected Output,SV Test Output,SV Test Expected Output
+TC-01,Reset and CPU Boot Initialization,"Verify power-on reset initializes the SoC, all IP registers clear to default states, and VeeR EL2 core begins instruction fetch at boot vector 0x0000_0000.","• Internal active-high reset rst_sync = ~rst_n distributes across fabric;
+• Subsystem FSMs (DMA M_IDLE, Timer, Accelerator, UART, SPI) reset to default states;
+• VeeR EL2 core rst_l release initiates pipeline fetch on IFU AHB bus;
+• AHB-to-AXI IFU bridge latches haddr = 0x0000_0000 and asserts s00_axil_arvalid = 1.","• Assert active-low reset pulse on top-level rst_n for 5+ clock cycles;
+• Observe initial default pin states: uart_tx = 1 (idle), spi_cs_n = 1 (inactive), spi_sclk = 0, gpio_out = 0x00;
+• Observe rv_trace_valid and instruction fetch activity progressing from 0x0000_0000;
+• Confirm pic_interrupts[5:0] == 6b000000 and irq_core == 0 upon reset release.","• System Clock & Reset: clk (100 MHz), rst_n;
+• External Pin Monitors: uart_tx, spi_cs_n, spi_sclk, gpio_out[7:0];
+• Core Instruction Trace: rv_trace_insn[31:0], rv_trace_address[31:0], rv_trace_valid.","• Reset asserted/released cleanly;
+• Default pin values verified;
+• First fetch at 0x0000_0000;
+• No bus hang or deadlock during reset release.",Pass,Firmware reaches boot marker and initializes system control block without CPU exception.,Pass,Reset and initial fetch occur at 0x0000_0000; default pin states match specification; CPU progresses.
+TC-02,Instruction Memory (IMEM) Preload & Access Protection,"Verify intended firmware image is preloaded into IMEM (0x0000_0000), CPU fetches over Master s00, and fabric enforces read-only access by returning AXI_DECERR on write attempts.","• Memory array preloaded via $readmemh with hex instructions at 0x0000_0000;
+• AXI Read handshake on m00_axil_araddr/rdata returns AXI_OKAY (2b00);
+• Interconnect permission matrix allows s00 (IFU) and s01 (LSU) read permissions;
+• AXI Write attempt (s01_axil_awvalid = 1 to 0x0000_0000) intercepted by fabric; returns AXI_DECERR (2b11) without corrupting IMEM.","• Preload instruction image via testbench prior to reset de-assertion;
+• Inject illegal write transaction over external host bus (ext_host_en = 1, ext_lsu_awaddr = 0x0000_0000, ext_lsu_wdata = 0xDEADBEEF);
+• Verify testbench receives ext_lsu_bresp == AXI_DECERR (2b11);
+• Perform readback and confirm location 0x0000_0000 retains original preloaded instruction.","• External Host Interface: ext_host_en, ext_lsu_awaddr, ext_lsu_wdata, ext_lsu_bresp, ext_lsu_bvalid, ext_lsu_bready;
+• Simulation Parameter: IMEM_INIT_FILE.","• IMEM initialized with valid code;
+• CPU fetches valid instructions;
+• Write to IMEM returns AXI_DECERR;
+• Read from IMEM returns AXI_OKAY with correct instruction word.",Pass,Firmware executes from 0x0000_0000; software write to ROM traps or returns error.,Pass,Read from 0x0000_0000 returns AXI_OKAY; write to 0x0000_0000 returns AXI_DECERR (2b11).
+TC-03,Data Memory (DMEM) Word Read/Write & Byte-Strobe Alignment,"Verify CPU and DMA read/write access to Data Memory (0x1000_0000), validating full 32-bit word access and selective byte-lane masking (wstrb[3:0]).","• 32-bit full-word write to 0x1000_0010 (wstrb = 4b1111) updates memory array;
+• Single-byte write (wstrb = 4b0100) updates only byte 2 [23:16], preserving remaining bytes;
+• Half-word writes (wstrb = 4b0011 / 4b1100) update targeted 16-bit lanes;
+• Memory readback confirms byte preservation and zero data corruption.","• Testbench LSU driver issues 32-bit write of 0x11223344 to 0x1000_0010;
+• Testbench issues partial write of 0x00AA0000 with wstrb = 4b0100;
+• Testbench reads 0x1000_0010 and validates ext_lsu_rdata == 0x11AA3344.","• External Host Interface: ext_host_en, ext_lsu_awaddr, ext_lsu_wdata, ext_lsu_wstrb, ext_lsu_araddr, ext_lsu_rdata, ext_lsu_rresp.","• AXI write and read handshakes complete with AXI_OKAY;
+• Full word readback matches written word;
+• Byte strobe selectively updates specified byte lane while preserving others.",Pass,Memory self-test in C verifies full word and byte-level updates without data corruption.,Pass,Readback 0x1000_0010 returns 0x11AA3344 matching written pattern with byte strobe.
+TC-04,"AXI4-Lite Interconnect Routing, Arbitration & DECERR Trapping","Verify address decoding across all 8 slaves (m00-m07), master arbitration among 3 masters (s00-s02), and DECERR response on unmapped addresses without fabric deadlock.","• Address decoder routes base addresses (0x0000_0000, 0x1000_0000, 0x4000_0000-0x4000_5000) to corresponding slave ports;
+• Permission matrix enforces IFU cannot access peripherals (returns DECERR);
+• DMA Master (s02) can only access DMEM (0x1000_0000);
+• Access to unmapped address 0x3000_0000 returns AXI_DECERR (2b11) immediately without bus lockup.","• Testbench injects read to unmapped address 0x3000_0000;
+• Testbench verifies ext_lsu_rresp == AXI_DECERR within 2 clock cycles;
+• Subsequent read to valid address (0x1000_0010) completes with AXI_OKAY, proving fabric recovery.","• External Host Interface: ext_host_en, ext_lsu_araddr, ext_lsu_rresp, ext_lsu_rvalid, ext_lsu_rready.","• Valid accesses route to correct peripheral;
+• Unmapped address returns DECERR;
+• Interconnect recovers immediately without stalling subsequent transactions.",Pass,Access to invalid address triggers Bus Error/DECERR trap; valid peripheral accesses succeed.,Pass,Access to 0x3000_0000 returns AXI_DECERR (2b11); bus remains fully operational.
+TC-05,"UART Initialization, Status Polling, TX Transmission & Loopback","Verify UART Controller (0x4000_0000) configuration, TX FIFO queuing, serial transmission over uart_tx, and loopback reception over uart_rx.","• Register write to UART_CTRL (0x00) configures baud rate divisor and enables TX/RX;
+• Write to UART_TXDATA (0x08) pushes byte into 16-entry FIFO and asserts transmission state machine;
+• Serial bit shifter generates 1 start bit, 8 data bits, and 1 stop bit;
+• RX deserializer samples incoming bits at mid-bit intervals and asserts UART_STATUS.rx_valid.","• Connect uart_rx <= uart_tx in testbench loopback mode;
+• Write character 0x55 (U) to UART_TXDATA;
+• Monitor serial waveform on uart_tx pin matching 8-N-1 UART framing;
+• Read UART_RXDATA (0x0C) and confirm received byte equals 0x55.","• External UART Pins: uart_tx (output), uart_rx (input);
+• UART Protocol Monitor & Serial Loopback Testbench Driver.","• UART_STATUS shows tx_ready = 1;
+• Transmitted serial frame follows 8-N-1 timing;
+• rx_valid asserts after reception;
+• Received byte matches transmitted byte.",Pass,"UART initializes, sends test string, and receives expected loopback byte 0x55.",Pass,UART_STATUS.tx_ready = 1; rx_valid asserts after loopback; readback UART_RXDATA = 0x55.
+TC-06,"Timer Free-Running Count, Compare Match & W1C Status Clear","Verify Timer (0x4000_1000) increments 32-bit counter, asserts compare match interrupt (irq_timer) when count reaches compare value, and clears status on Write-1-to-Clear.","• Counter increments every clock cycle when TIMER_CTRL.enable == 1;
+• When timer_count == timer_compare, timer_match_status asserts high;
+• Interrupt line irq_timer asserts high and maps to pic_interrupts[4];
+• Write of 1 to TIMER_STATUS[0] (0x0C) clears timer_match_status to 0.","• Host writes TIMER_COMPARE = 10 and enables timer with IRQ (TIMER_CTRL = 0x05);
+• Testbench monitors top-level pin pic_interrupts[4] transitioning to 1 after 10 clock cycles;
+• Host writes 0x00000001 to TIMER_STATUS and verifies pic_interrupts[4] de-asserts to 0.","• External Interrupt Vector Monitor: pic_interrupts[5:0], irq_core;
+• External Host Interface: ext_host_en, ext_lsu_*.","• Counter counts monotonically;
+• pic_interrupts[4] asserts on compare match;
+• W1C write to TIMER_STATUS clears interrupt line to 0.",Pass,"Timer counts, triggers compare interrupt, and clears cleanly via software ISR.",Pass,Timer compare match asserts pic_interrupts[4]; W1C write clears pic_interrupts[4].
+TC-07,"GPIO Direction, Output Pin Driving & Edge-Triggered Interrupts","Verify GPIO (0x4000_2000) direction configuration (GPIO_DIR), output pin driving (GPIO_OUT), and input edge detection asserting irq_gpio.","• Writing GPIO_DIR = 0xF0 sets upper 4 pins as outputs and lower 4 pins as inputs;
+• Writing GPIO_OUT = 0xA0 updates output register and drives physical output pads;
+• Enabling interrupt mask in GPIO_INT_EN (0x0C) arms edge detector;
+• Input transition asserts irq_gpio (mapped to pic_interrupts[5]);
+• Write-1-to-Clear on GPIO_INT_STATUS (0x10) clears pending interrupt.","• Host configures GPIO_DIR = 0xF0 and writes GPIO_OUT = 0xA0;
+• Testbench monitors external pins gpio_out[7:0] and verifies value equals 0xA0;
+• Testbench applies external rising edge to pin gpio_in[0] = 1b1;
+• Testbench verifies pic_interrupts[5] asserts high.","• External GPIO Pins: gpio_in[7:0] (input pads), gpio_out[7:0] (output pads);
+• External Interrupt Monitor: pic_interrupts[5].","• gpio_out reflects programmed output value;
+• Rising edge on gpio_in asserts pic_interrupts[5];
+• W1C clears GPIO interrupt line.",Pass,GPIO output driven to 0xA0; external button/pin trigger enters GPIO ISR.,Pass,gpio_out reflects 0xA0; input edge asserts pic_interrupts[5]; W1C clears IRQ.
+TC-08,"SPI Controller Register Configuration, Clock Generation & Loopback","Verify SPI Controller (0x4000_5000) register access, SCLK prescaler configuration, chip-select (CS_N) assertion, MOSI serialization, and MISO loopback.","• Reading default SPI_SR (0x64) confirms TX_EMPTY (bit 2) and RX_EMPTY (bit 0) are set (0x00000005);
+• Writing SPI_RCLK (0x30) configures serial clock divider;
+• Writing data to SPI_DTR (0x68) pushes byte into 32-entry FIFO;
+• Shift register serializes byte onto MOSI synchronized to SCLK edges according to CPOL/CPHA.","• Testbench monitors spi_cs_n asserting low during active transfer;
+• Testbench connects spi_mosi directly back to spi_miso;
+• Host reads SPI_DRR (0x6C) and confirms received byte matches transmitted byte.","• External SPI Pins: spi_sclk (output), spi_cs_n (output), spi_mosi (output), spi_miso (input);
+• SPI Protocol Analyzer & Testbench Serial Loopback Model.","• SPI_SR default status matches specification;
+• SCLK frequency matches divider configuration;
+• Loopback transfer receives byte matching transmitted byte.",Pass,"SPI initializes, drives external bus transaction, and receives loopback byte.",Pass,SPI_SR default = 0x00000005; SPI_RCLK configured; loopback transfer completes with 0 errors.
+TC-09,Arithmetic Accelerator Direct ALU Operations & Divide-by-Zero Exception,"Verify Arithmetic Accelerator (0x4000_3000) in CPU direct mode for ADD, SUB, MUL, DIV, and MAC, including divide-by-zero detection and status error flag assertion.","• Host writes OPERAND_A (0x0C) and OPERAND_B (0x10);
+• SUB execution: 120 - 45 = 75, result latched in ACC_RESULT (0x14);
+• MAC execution: ACC_ACC_REG += (A * B) accumulates products into 64-bit internal register;
+• Divide-by-zero check: 100 / 0 sets ACC_STATUS.error (bit 2), returns 0xFFFFFFFF, and asserts error flag;
+• Direct mode start pulse triggers 1-cycle compute without stalling the bus.","• Host writes OPERAND_A = 120, OPERAND_B = 45, ACC_CTRL = SUB | start;
+• Host reads ACC_RESULT and validates 0x0000004B (75);
+• Host writes OPERAND_B = 0, ACC_CTRL = DIV | start;
+• Host reads ACC_STATUS (0x04) and confirms error bit is asserted.","• External Host Interface: ext_host_en, ext_lsu_aw*, ext_lsu_w*, ext_lsu_ar*, ext_lsu_r*.","• Direct SUB 120 - 45 yields 75;
+• Divide-by-zero asserts ACC_STATUS.error flag;
+• MAC accumulates products correctly without overflow.",Pass,"Software direct mode test verifies ADD, SUB, MUL, DIV results and detects divide-by-zero.",Pass,ACC_RESULT = 75 for SUB; divide-by-zero sets ACC_STATUS.error (bit 2).
+TC-10,DMA Controller Configuration & Autonomous Master Bus Transactions,Verify DMA Controller (0x4000_4000) configuration via Slave port m06 and autonomous bus mastering on Master port s02 across Data Memory (0x1000_0000).,"• Configuration writes to DMA_SRC_ADDR (0x00), DMA_DST_ADDR (0x04), and DMA_LENGTH (0x08);
+• Writing start bit in DMA_CTRL (0x0C) transitions master FSM from M_IDLE to M_READ_A;
+• DMA drives m_araddr = DMA_SRC_ADDR, issues AXI read bursts on s02, and receives operand pairs over fabric;
+• Error detection: Invalid source address returns AXI_DECERR, transitioning DMA to M_ERROR and logging DMA_ERR_ADDR.","• Host sets up source buffer in DMEM with deterministic vector values;
+• Host starts DMA transfer of 4 words and monitors DMA_STATUS (0x10);
+• Testbench verifies DMA_STATUS.busy asserts during transfer and DMA_STATUS.done asserts upon completion.","• External Host Interface: ext_host_en, ext_lsu_*;
+• Interrupt Pin Monitor: pic_interrupts[1] (irq_dma).","• DMA accepts configuration registers;
+• DMA autonomously masters fabric read/write channels;
+• DMA_STATUS.done asserts and raises irq_dma upon block completion.",Pass,Firmware configures DMA; DMA executes block transfer and signals completion via interrupt.,Pass,DMA completes block movement; DMA_STATUS.done = 1; pic_interrupts[1] asserts.
+TC-11,Dedicated Compute Datapath (DMEM -> DMA -> Accelerator -> DMA -> DMEM),Verify the autonomous streaming point-to-point datapath between DMA Master s02 and Arithmetic Accelerator m05 without CPU intervention.,"• DMA reads Operand A from DMEM (0x1000_0100) and Operand B from DMEM (0x1000_0104);
+• DMA asserts dma_op_valid = 1, streaming pair {dma_op_data_a, dma_op_data_b} to accelerator;
+• Accelerator asserts dma_op_ready = 1, computes arithmetic result, asserts dma_res_valid = 1;
+• DMA captures dma_res_data, asserts dma_res_ready = 1, and writes result back to DMEM destination (0x1000_0200) via fabric master port s02;
+• Multi-pair burst sequencing: Counter decrements dma_length, asserting dma_last on final operand pair.","• Testbench preloads 4 operand pairs: (10, 20), (100, 200), (5, 15), (50, 50) at 0x1000_0100;
+• Host arms Accelerator for ADD and DMA for 4 iterations;
+• Testbench observes pic_interrupts[1] (irq_dma) assert;
+• Testbench reads DMEM destination at 0x1000_0200-0x1000_020C and verifies results match: 30, 300, 20, 100.","• External Host Interface: ext_host_en, ext_lsu_*;
+• Interrupt Vector: pic_interrupts[1].","• Dedicated streaming handshake completes with 0 wait stalls;
+• Accelerator computes pipelined results in hardware;
+• DMA writes all computed results to DMEM accurately.",Pass,Offloaded vector compute completes; destination buffer matches golden mathematical reference.,Pass,"DMA raises pic_interrupts[1]; Result[0]=30, Result[1]=300, Result[2]=20, Result[3]=100."
+TC-12,Peripheral Interrupt Aggregation to VeeR Core PIC & Composite IRQ,"Verify that interrupt events from Accelerator, DMA, SPI, UART, Timer, and GPIO aggregate into the 6-line vector pic_interrupts[5:0] and assert composite irq_core.","• Peripheral IRQ assertion routes to riscv_core_top PIC input extintsrc_req[6:1];
+• Priority resolution and interrupt gateway in VeeR PIC (el2_pic_ctrl.sv);
+• Core transitions execution to interrupt trap vector mtvec when interrupts are enabled in mstatus.MIE and mie.MEIE.","• Testbench triggers each peripheral IRQ individually (Timer match, GPIO edge, DMA done, UART TX empty, SPI transfer, Accelerator done);
+• Testbench probes top-level outputs pic_interrupts[5:0] and verifies corresponding bit asserts;
+• Testbench verifies composite output irq_core == |pic_interrupts asserts high.","• External Interrupt Outputs: pic_interrupts[5:0], irq_core;
+• Testbench IRQ Assertion Watcher.","• All 6 peripheral IRQ sources correctly map to PIC lines 1-6;
+• irq_core asserts when any interrupt is active;
+• PIC prioritizes and signals core trap.",Pass,Core vector interrupt handler services each peripheral interrupt and clears source status.,Pass,pic_interrupts[5:0] reflects active IRQs; irq_core asserts high on active interrupt.
+TC-13,"Firmware Completion, UART Status Reporting & Error Handling","Verify firmware executes from IMEM, monitors offload progress, formats ASCII status/error reports, prints to UART, and updates GPIO status flags.","• Core executes C/Assembly firmware loop fetching from IMEM;
+• Firmware polls DMA_STATUS or awaits interrupt (WFI);
+• Firmware checks ACC_STATUS.error bit for divide-by-zero or overflow;
+• Firmware formats ASCII report string (e.g. [PASS] SoC Compute Done\n) and pushes to UART_TXDATA.","• Testbench monitors uart_tx serial pin and decodes ASCII character sequence;
+• Testbench verifies final terminal message is received within bounded simulation time (no hang/infinite loop);
+• Testbench verifies gpio_out[7:0] reflects pass status (e.g. 0x01).","• External UART Pin: uart_tx (Serial receiver decoder);
+• External GPIO Pins: gpio_out[7:0];
+• Core Trace Signals: rv_trace_valid, rv_trace_insn.","• Firmware reaches terminal state without infinite hang;
+• UART outputs clear diagnostic text;
+• GPIO reflects final pass/fail flag.",Pass,Firmware reports [PASS] SoC Compute Complete over UART and drives GPIO status LED.,Pass,UART decodes expected ASCII message; simulation terminates cleanly with $finish.
+TC-14,Full System End-to-End Autonomous Compute Pipeline (Vector Acceleration),"Complete system verification: RISC-V CPU boots from IMEM, stages vector arrays in DMEM, configures DMA & Accelerator, offloads computation, services interrupt, and reports results over UART & SPI.","• CPU IFU fetches firmware instructions over AXI Master s00;
+• CPU LSU writes vector configuration over AXI Master s01;
+• DMA Master s02 takes over bus, fetches vector data from DMEM, streams through Accelerator pipeline, and writes results back to DMEM;
+• Interconnect arbitrates between CPU and DMA smoothly without bus lockup or data corruption;
+• Hardware accelerator executes vector MAC in pipeline: Result = Sum(A[i] * B[i]);
+• DMA raises interrupt upon final result write; core services ISR and updates peripherals.","• Run full end-to-end simulation from reset to completion;
+• Capture FSDB/VCD waveform demonstrating concurrency: CPU sequencing, DMA streaming, Accelerator pipelining, UART reporting;
+• Verify 100% data integrity between hardware-computed vector output and software golden mathematical reference.","• Full Top-Level SoC Interface: clk, rst_n, uart_tx, uart_rx, spi_sclk, spi_cs_n, spi_mosi, spi_miso, gpio_in[7:0], gpio_out[7:0], pic_interrupts[5:0], irq_core, rv_trace_*.","• Complete compute offload path functions autonomously;
+• Hardware acceleration delivers correct arithmetic results;
+• Interconnect handles shared bus transactions with 0 errors;
+• Full regression passes.",Pass,End-to-end vector acceleration completes; results match reference model; UART logs execution time and pass status.,Pass,All 10 SoC top-level tests pass with 0 errors; waveform proves autonomous compute pipelining.

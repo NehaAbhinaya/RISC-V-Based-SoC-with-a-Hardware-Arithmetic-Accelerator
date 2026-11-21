@@ -1,0 +1,50 @@
+{
+    "vcs_paramclassrepository": [
+        "vcs_paramclassrepository",
+        "hEeZs",
+        "module",
+        1
+    ],
+    "std": [
+        "std",
+        "reYIK",
+        "module",
+        2
+    ],
+    "uvm_pkg": [
+        "uvm_pkg",
+        "zr7M1",
+        "module",
+        3
+    ],
+    "dma_controller": [
+        "dma_controller",
+        "kTLsY",
+        "module",
+        4
+    ],
+    "dma_if": [
+        "dma_if",
+        "k5Wmx",
+        "module",
+        5
+    ],
+    "dma_pkg": [
+        "dma_pkg",
+        "sTjPw",
+        "module",
+        6
+    ],
+    "tb_top": [
+        "tb_top",
+        "jdPWL",
+        "module",
+        7
+    ],
+    "...MASTER...": [
+        "SIM",
+        "amcQw",
+        "module",
+        8
+    ]
+}

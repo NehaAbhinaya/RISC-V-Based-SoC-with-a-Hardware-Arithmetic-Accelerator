@@ -1,0 +1,59 @@
+Command: /home/student/Downloads/Honours project/Project/testbench/vips/uart_vip/./simv_uart -l uart_sim_run.log
+Chronologic VCS simulator copyright 1991-2023
+Contains Synopsys proprietary information.
+Compiler version U-2023.03_Full64; Runtime version U-2023.03_Full64;  Nov  7 14:48 2026
+----------------------------------------------------------------
+UVM-1.1d.Synopsys
+(C) 2007-2013 Mentor Graphics Corporation
+(C) 2007-2013 Cadence Design Systems, Inc.
+(C) 2006-2013 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_NO_DEPRECATED undefined.
+  See http://www.eda.org/svdb/view.php?id=3313 for more details.
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_OBJECT_MUST_HAVE_CONSTRUCTOR undefined.
+  See http://www.eda.org/svdb/view.php?id=3770 for more details.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+UVM_INFO @ 0: reporter [RNTST] Running test uart_test...
+UVM_INFO uart_test.sv(28) @ 0: uvm_test_top [UART_TEST] Executing UART VIP Functional Verification Test...
+UVM_INFO uart_seq.sv(92) @ 0: uvm_test_top.env.agent.seqr@@seq [UART_SEQ] Starting UART Smoke Sequence (Transmit 0xA5 + Receive 0xA5)...
+UVM_INFO uart_seq.sv(43) @ 135000: uvm_test_top.env.agent.seqr@@seq.tx_seq [UART_SEQ] Triggered transmission of byte 0xA5 via UART_TXDATA
+UVM_INFO uart_driver.sv(72) @ 135000: uvm_test_top.env.agent.drv [UART_DRV] Driving serial RX byte: 0xa5 (divisor=8 cycles/bit)
+UVM_INFO uart_monitor.sv(65) @ 895000: uvm_test_top.env.agent.mon [UART_MON] Monitored UART TX frame: 0xa5 ('.')
+UVM_INFO uart_scoreboard.sv(36) @ 895000: uvm_test_top.env.sb [UART_SB] [SCOREBOARD MATCH] Monitored UART TX byte 0xa5 perfectly matches expected 0xa5
+UVM_INFO uart_seq.sv(66) @ 965000: uvm_test_top.env.agent.seqr@@seq.rx_seq [UART_SEQ] Injected serial test byte 0xA5 onto uart_rx line
+UVM_INFO uart_seq.sv(76) @ 1015000: uvm_test_top.env.agent.seqr@@seq.rx_seq [UART_SEQ] Read UART_RXDATA returned: 0xa5
+UVM_INFO uart_seq.sv(95) @ 1015000: uvm_test_top.env.agent.seqr@@seq [UART_SEQ] UART Smoke Sequence completed successfully.
+UVM_INFO uart_test.sv(36) @ 3015000: uvm_test_top [UART_TEST] UART VIP Test Finished.
+UVM_INFO /home/student/snps_tools_target/vcs/U-2023.03/etc/uvm/base/uvm_objection.svh(1274) @ 3015000: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+UVM_INFO uart_scoreboard.sv(57) @ 3015000: uvm_test_top.env.sb [UART_SB] UART Scoreboard Summary: 1 Matches, 0 Mismatches
+
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO :   13
+UVM_WARNING :    0
+UVM_ERROR :    0
+UVM_FATAL :    0
+** Report counts by id
+[RNTST]     1
+[TEST_DONE]     1
+[UART_DRV]     1
+[UART_MON]     1
+[UART_SB]     2
+[UART_SEQ]     5
+[UART_TEST]     2
+$finish called from file "/home/student/snps_tools_target/vcs/U-2023.03/etc/uvm/base/uvm_root.svh", line 437.
+$finish at simulation time              3015000
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 3015000 ps
+CPU Time:      0.140 seconds;       Data structure size:   0.3Mb
+Sat Nov  7 14:48:02 2026

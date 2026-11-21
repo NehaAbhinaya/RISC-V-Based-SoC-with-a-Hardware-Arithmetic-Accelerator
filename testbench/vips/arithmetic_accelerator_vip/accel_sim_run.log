@@ -1,0 +1,94 @@
+Command: /home/student/Downloads/Honours project/Project/testbench/vips/arithmetic_accelerator_vip/./simv_accel -l accel_sim_run.log
+Chronologic VCS simulator copyright 1991-2023
+Contains Synopsys proprietary information.
+Compiler version U-2023.03_Full64; Runtime version U-2023.03_Full64;  Nov  7 14:47 2026
+----------------------------------------------------------------
+UVM-1.1d.Synopsys
+(C) 2007-2013 Mentor Graphics Corporation
+(C) 2007-2013 Cadence Design Systems, Inc.
+(C) 2006-2013 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_NO_DEPRECATED undefined.
+  See http://www.eda.org/svdb/view.php?id=3313 for more details.
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_OBJECT_MUST_HAVE_CONSTRUCTOR undefined.
+  See http://www.eda.org/svdb/view.php?id=3770 for more details.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+UVM_INFO @ 0: reporter [RNTST] Running test arithmetic_accelerator_test...
+UVM_INFO arithmetic_accelerator_test.sv(28) @ 0: uvm_test_top [ACCEL_TEST] Executing Arithmetic Accelerator VIP Functional Verification Test...
+UVM_INFO arithmetic_accelerator_seq.sv(22) @ 0: uvm_test_top.env.agent.seqr@@seq [ACCEL_SEQ] Starting Arithmetic Accelerator ALU Sequences...
+UVM_INFO arithmetic_accelerator_driver.sv(77) @ 20000: uvm_test_top.env.agent.drv [ACCEL_DRV] Direct Mode ALU Trigger: Opcode=0, A=7, B=5
+UVM_INFO arithmetic_accelerator_monitor.sv(59) @ 235000: uvm_test_top.env.agent.mon [ACCEL_MON] Monitored direct mode register read = 0x0000000c (12)
+UVM_INFO arithmetic_accelerator_scoreboard.sv(46) @ 235000: uvm_test_top.env.sb [ACCEL_SB] [SCOREBOARD MATCH] ADD Operation Result Verified: 7 + 5 = 12
+UVM_INFO arithmetic_accelerator_monitor.sv(59) @ 285000: uvm_test_top.env.agent.mon [ACCEL_MON] Monitored direct mode register read = 0x00000002 (2)
+UVM_INFO arithmetic_accelerator_scoreboard.sv(70) @ 285000: uvm_test_top.env.sb [ACCEL_SB] [SCOREBOARD OBSERVED] Accelerator captured result: 0x00000002 (2)
+UVM_INFO arithmetic_accelerator_seq.sv(32) @ 305000: uvm_test_top.env.agent.seqr@@seq [ACCEL_SEQ] Executed ADD: 7 + 5 = 12
+UVM_INFO arithmetic_accelerator_driver.sv(77) @ 305000: uvm_test_top.env.agent.drv [ACCEL_DRV] Direct Mode ALU Trigger: Opcode=1, A=15, B=6
+UVM_INFO arithmetic_accelerator_monitor.sv(59) @ 525000: uvm_test_top.env.agent.mon [ACCEL_MON] Monitored direct mode register read = 0x00000009 (9)
+UVM_INFO arithmetic_accelerator_scoreboard.sv(50) @ 525000: uvm_test_top.env.sb [ACCEL_SB] [SCOREBOARD MATCH] SUB Operation Result Verified: 15 - 6 = 9
+UVM_INFO arithmetic_accelerator_monitor.sv(59) @ 575000: uvm_test_top.env.agent.mon [ACCEL_MON] Monitored direct mode register read = 0x00000002 (2)
+UVM_INFO arithmetic_accelerator_scoreboard.sv(70) @ 575000: uvm_test_top.env.sb [ACCEL_SB] [SCOREBOARD OBSERVED] Accelerator captured result: 0x00000002 (2)
+UVM_INFO arithmetic_accelerator_seq.sv(42) @ 595000: uvm_test_top.env.agent.seqr@@seq [ACCEL_SEQ] Executed SUB: 15 - 6 = 9
+UVM_INFO arithmetic_accelerator_driver.sv(77) @ 595000: uvm_test_top.env.agent.drv [ACCEL_DRV] Direct Mode ALU Trigger: Opcode=2, A=6, B=7
+UVM_INFO arithmetic_accelerator_monitor.sv(59) @ 815000: uvm_test_top.env.agent.mon [ACCEL_MON] Monitored direct mode register read = 0x0000002a (42)
+UVM_INFO arithmetic_accelerator_scoreboard.sv(54) @ 815000: uvm_test_top.env.sb [ACCEL_SB] [SCOREBOARD MATCH] MUL Operation Result Verified: 6 * 7 = 42
+UVM_INFO arithmetic_accelerator_monitor.sv(59) @ 865000: uvm_test_top.env.agent.mon [ACCEL_MON] Monitored direct mode register read = 0x00000002 (2)
+UVM_INFO arithmetic_accelerator_scoreboard.sv(70) @ 865000: uvm_test_top.env.sb [ACCEL_SB] [SCOREBOARD OBSERVED] Accelerator captured result: 0x00000002 (2)
+UVM_INFO arithmetic_accelerator_seq.sv(52) @ 885000: uvm_test_top.env.agent.seqr@@seq [ACCEL_SEQ] Executed MUL: 6 * 7 = 42
+UVM_INFO arithmetic_accelerator_driver.sv(77) @ 885000: uvm_test_top.env.agent.drv [ACCEL_DRV] Direct Mode ALU Trigger: Opcode=3, A=20, B=4
+UVM_INFO arithmetic_accelerator_monitor.sv(59) @ 1105000: uvm_test_top.env.agent.mon [ACCEL_MON] Monitored direct mode register read = 0x00000005 (5)
+UVM_INFO arithmetic_accelerator_scoreboard.sv(58) @ 1105000: uvm_test_top.env.sb [ACCEL_SB] [SCOREBOARD MATCH] DIV Operation Result Verified: 20 / 4 = 5
+UVM_INFO arithmetic_accelerator_monitor.sv(59) @ 1155000: uvm_test_top.env.agent.mon [ACCEL_MON] Monitored direct mode register read = 0x00000002 (2)
+UVM_INFO arithmetic_accelerator_scoreboard.sv(70) @ 1155000: uvm_test_top.env.sb [ACCEL_SB] [SCOREBOARD OBSERVED] Accelerator captured result: 0x00000002 (2)
+UVM_INFO arithmetic_accelerator_seq.sv(62) @ 1175000: uvm_test_top.env.agent.seqr@@seq [ACCEL_SEQ] Executed DIV: 20 / 4 = 5
+UVM_INFO arithmetic_accelerator_driver.sv(77) @ 1235000: uvm_test_top.env.agent.drv [ACCEL_DRV] Direct Mode ALU Trigger: Opcode=4, A=10, B=20
+UVM_INFO arithmetic_accelerator_monitor.sv(59) @ 1455000: uvm_test_top.env.agent.mon [ACCEL_MON] Monitored direct mode register read = 0x000000c8 (200)
+UVM_INFO arithmetic_accelerator_scoreboard.sv(70) @ 1455000: uvm_test_top.env.sb [ACCEL_SB] [SCOREBOARD OBSERVED] Accelerator captured result: 0x000000c8 (200)
+UVM_INFO arithmetic_accelerator_monitor.sv(59) @ 1505000: uvm_test_top.env.agent.mon [ACCEL_MON] Monitored direct mode register read = 0x00000002 (2)
+UVM_INFO arithmetic_accelerator_scoreboard.sv(70) @ 1505000: uvm_test_top.env.sb [ACCEL_SB] [SCOREBOARD OBSERVED] Accelerator captured result: 0x00000002 (2)
+UVM_INFO arithmetic_accelerator_driver.sv(77) @ 1525000: uvm_test_top.env.agent.drv [ACCEL_DRV] Direct Mode ALU Trigger: Opcode=4, A=30, B=40
+UVM_INFO arithmetic_accelerator_monitor.sv(59) @ 1745000: uvm_test_top.env.agent.mon [ACCEL_MON] Monitored direct mode register read = 0x00000578 (1400)
+UVM_INFO arithmetic_accelerator_scoreboard.sv(62) @ 1745000: uvm_test_top.env.sb [ACCEL_SB] [SCOREBOARD MATCH] MAC Operation Result Verified: (10*20) + (30*40) = 1400
+UVM_INFO arithmetic_accelerator_monitor.sv(59) @ 1795000: uvm_test_top.env.agent.mon [ACCEL_MON] Monitored direct mode register read = 0x00000002 (2)
+UVM_INFO arithmetic_accelerator_scoreboard.sv(70) @ 1795000: uvm_test_top.env.sb [ACCEL_SB] [SCOREBOARD OBSERVED] Accelerator captured result: 0x00000002 (2)
+UVM_INFO arithmetic_accelerator_seq.sv(91) @ 1815000: uvm_test_top.env.agent.seqr@@seq [ACCEL_SEQ] Executed MAC: (10*20) + (30*40) = 1400
+UVM_INFO arithmetic_accelerator_driver.sv(77) @ 1815000: uvm_test_top.env.agent.drv [ACCEL_DRV] Direct Mode ALU Trigger: Opcode=3, A=100, B=0
+UVM_INFO arithmetic_accelerator_monitor.sv(59) @ 2035000: uvm_test_top.env.agent.mon [ACCEL_MON] Monitored direct mode register read = 0xffffffff (4294967295)
+UVM_INFO arithmetic_accelerator_scoreboard.sv(70) @ 2035000: uvm_test_top.env.sb [ACCEL_SB] [SCOREBOARD OBSERVED] Accelerator captured result: 0xffffffff (4294967295)
+UVM_INFO arithmetic_accelerator_monitor.sv(59) @ 2085000: uvm_test_top.env.agent.mon [ACCEL_MON] Monitored direct mode register read = 0x00000006 (6)
+UVM_INFO arithmetic_accelerator_scoreboard.sv(70) @ 2085000: uvm_test_top.env.sb [ACCEL_SB] [SCOREBOARD OBSERVED] Accelerator captured result: 0x00000006 (6)
+UVM_INFO arithmetic_accelerator_seq.sv(101) @ 2105000: uvm_test_top.env.agent.seqr@@seq [ACCEL_SEQ] Executed Divide-by-zero: err flag = 1
+UVM_INFO arithmetic_accelerator_seq.sv(103) @ 2105000: uvm_test_top.env.agent.seqr@@seq [ACCEL_SEQ] Arithmetic Accelerator ALU Sequences finished.
+UVM_INFO arithmetic_accelerator_test.sv(34) @ 3105000: uvm_test_top [ACCEL_TEST] Arithmetic Accelerator VIP Test Finished.
+UVM_INFO /home/student/snps_tools_target/vcs/U-2023.03/etc/uvm/base/uvm_objection.svh(1274) @ 3105000: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+UVM_INFO arithmetic_accelerator_scoreboard.sv(78) @ 3105000: uvm_test_top.env.sb [ACCEL_SB] Arithmetic Accelerator Scoreboard Summary: 14 Matches, 0 Mismatches
+
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO :   48
+UVM_WARNING :    0
+UVM_ERROR :    0
+UVM_FATAL :    0
+** Report counts by id
+[ACCEL_DRV]     7
+[ACCEL_MON]    14
+[ACCEL_SB]    15
+[ACCEL_SEQ]     8
+[ACCEL_TEST]     2
+[RNTST]     1
+[TEST_DONE]     1
+$finish called from file "/home/student/snps_tools_target/vcs/U-2023.03/etc/uvm/base/uvm_root.svh", line 437.
+$finish at simulation time              3105000
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 3105000 ps
+CPU Time:      0.140 seconds;       Data structure size:   0.3Mb
+Sat Nov  7 14:47:31 2026

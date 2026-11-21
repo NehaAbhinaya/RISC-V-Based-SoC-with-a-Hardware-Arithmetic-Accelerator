@@ -1,0 +1,54 @@
+/* ==============================================================================
+ * Project        : RISC-V VeeR EL2 SoC with Hardware Arithmetic Accelerator
+ * Subsystem      : SoC-Level UVM Verification Environment
+ * File           : accelerator_if.sv
+ * Description    : SystemVerilog interface for Arithmetic Accelerator VIP integration with soc_top.
+ * ============================================================================== */
+
+`ifndef ARITHMETIC_ACCELERATOR_IF_SV
+`define ARITHMETIC_ACCELERATOR_IF_SV
+
+interface arithmetic_accelerator_if;
+  logic clk;
+  logic rst_n;
+
+  // Interrupt line
+  logic irq_acc;
+
+  // Dedicated Streaming Interface to DMA
+  logic        dma_op_valid;
+  logic [31:0] dma_op_data_a;
+  logic [31:0] dma_op_data_b;
+  logic        dma_op_ready;
+  logic        dma_res_valid;
+  logic [31:0] dma_res_data;
+  logic        dma_res_ready;
+  logic        dma_last;
+
+  // AXI4-Lite Slave Interface (m05 @ 0x4000_3000)
+  logic [31:0] s_axil_awaddr;
+  logic [2:0]  s_axil_awprot;
+  logic        s_axil_awvalid;
+  logic        s_axil_awready;
+  logic [31:0] s_axil_wdata;
+  logic [3:0]  s_axil_wstrb;
+  logic        s_axil_wvalid;
+  logic        s_axil_wready;
+  logic [1:0]  s_axil_bresp;
+  logic        s_axil_bvalid;
+  logic        s_axil_bready;
+  logic [31:0] s_axil_araddr;
+  logic [2:0]  s_axil_arprot;
+  logic        s_axil_arvalid;
+  logic        s_axil_arready;
+  logic [31:0] s_axil_rdata;
+  logic [1:0]  s_axil_rresp;
+  logic        s_axil_rvalid;
+  logic        s_axil_rready;
+
+endinterface : arithmetic_accelerator_if
+
+typedef virtual arithmetic_accelerator_if arithmetic_accelerator_vif;
+typedef virtual arithmetic_accelerator_if accelerator_vif;
+
+`endif // ARITHMETIC_ACCELERATOR_IF_SV

@@ -1,0 +1,13 @@
+Interface Port,Port Type,Connected Endpoint,Address Window,Size,Read Perm (s02:s01:s00),Write Perm (s02:s01:s00),Relevant Testcase
+s00_axil_*,Master-facing Slave 0,CPU IFU (via bridge),N/A (Master),N/A,Can read IMEM (m00) only,Write Disabled (Read-Only),"TC-01, TC-02, TC-14"
+s01_axil_*,Master-facing Slave 1,CPU LSU / TB Host,N/A (Master),N/A,Can read all memories and IPs,Can write all memories (excl IMEM) and IPs,"TC-02, TC-03, TC-04, TC-05, TC-06, TC-07, TC-08, TC-09, TC-10, TC-14"
+s02_axil_*,Master-facing Slave 2,DMA Controller Master,N/A (Master),N/A,Can read DMEM (m01) only,Can write DMEM (m01) only,"TC-10, TC-11, TC-14"
+m00_axil_*,Slave-facing Master 0,Instruction Memory (IMEM),0x0000_0000 - 0x0000_FFFF,64 KB,"3b011 (s00, s01 allowed)",3b000 (Protected Read-Only; writes return DECERR),"TC-01, TC-02, TC-14"
+m01_axil_*,Slave-facing Master 1,Data Memory (DMEM),0x1000_0000 - 0x1000_FFFF,64 KB,"3b110 (s01, s02 allowed)","3b110 (s01, s02 allowed; s00 blocked)","TC-03, TC-10, TC-11, TC-14"
+m02_axil_*,Slave-facing Master 2,UART Controller,0x4000_0000 - 0x4000_0FFF,4 KB,3b010 (s01 CPU LSU only),3b010 (s01 CPU LSU only),"TC-05, TC-13, TC-14"
+m03_axil_*,Slave-facing Master 3,System Timer,0x4000_1000 - 0x4000_1FFF,4 KB,3b010 (s01 CPU LSU only),3b010 (s01 CPU LSU only),"TC-06, TC-14"
+m04_axil_*,Slave-facing Master 4,GPIO Controller,0x4000_2000 - 0x4000_2FFF,4 KB,3b010 (s01 CPU LSU only),3b010 (s01 CPU LSU only),"TC-07, TC-13, TC-14"
+m05_axil_*,Slave-facing Master 5,Arithmetic Accelerator,0x4000_3000 - 0x4000_3FFF,4 KB,3b010 (s01 CPU LSU only),3b010 (s01 CPU LSU only),"TC-09, TC-14"
+m06_axil_*,Slave-facing Master 6,DMA Controller Registers,0x4000_4000 - 0x4000_4FFF,4 KB,3b010 (s01 CPU LSU only),3b010 (s01 CPU LSU only),"TC-10, TC-14"
+m07_axil_*,Slave-facing Master 7,SPI Master Controller,0x4000_5000 - 0x4000_5FFF,4 KB,3b010 (s01 CPU LSU only),3b010 (s01 CPU LSU only),"TC-08, TC-14"
+Unmapped Space,Internal DECERR Unit,Address Holes (e.g. 0x3000_0000),All unassigned space,N/A,Returns AXI_DECERR (2b11),Returns AXI_DECERR (2b11),TC-04

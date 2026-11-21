@@ -1,0 +1,25 @@
+rc file Version 1.0
+
+[Design]
+COMPILE_PATH=/home/student/Downloads/Honours project/Project/SOC_UVM/sim
+VCS_HOME=/home/student/snps_tools_target/vcs/U-2023.03
+VERDI_HOME=/home/student/snps_tools_target/verdi/U-2023.03-SP1
+SystemC=FALSE
+UUM=FALSE
+KDB=TRUE
+USE_NOVAS_HOME=FALSE
+COSIM=FALSE
+TOP=uvm_custom_install_recording uvm_custom_install_verdi_recording rvdffiee rvfindfirst1 rvfindfirst1hot clockhdr el2_ram ram_32768x39 ram_16384x39 ram_8192x39 ram_4096x39 ram_3072x39 ram_2048x39 ram_1536x39 ram_1024x39 ram_768x39 ram_512x39 ram_256x39 ram_128x39 ram_1024x20 ram_512x20 ram_256x20 ram_128x20 ram_64x20 ram_4096x34 ram_2048x34 ram_1024x34 ram_512x34 ram_256x34 ram_128x34 ram_64x34 ram_8192x68 ram_4096x68 ram_2048x68 ram_1024x68 ram_512x68 ram_256x68 ram_128x68 ram_64x68 ram_8192x71 ram_4096x71 ram_2048x71 ram_1024x71 ram_512x71 ram_256x71 ram_128x71 ram_64x71 ram_4096x42 ram_2048x42 ram_1024x42 ram_512x42 ram_256x42 ram_128x42 ram_64x42 ram_4096x22 ram_2048x22 ram_1024x22 ram_512x22 ram_256x22 ram_128x22 ram_64x22 ram_1024x26 ram_4096x26 ram_2048x26 ram_512x26 ram_256x26 ram_128x26 ram_64x26 ram_32x26 ram_32x22 ram_be_8192x142 ram_be_4096x142 ram_be_2048x142 ram_be_1024x142 ram_be_512x142 ram_be_256x142 ram_be_128x142 ram_be_64x142 ram_be_8192x284 ram_be_4096x284 ram_be_2048x284 ram_be_1024x284 ram_be_512x284 ram_be_256x284 ram_be_128x284 ram_be_64x284 ram_be_8192x136 ram_be_4096x136 ram_be_2048x136 ram_be_1024x136 ram_be_512x136 ram_be_256x136 ram_be_128x136 ram_be_64x136 ram_be_8192x272 ram_be_4096x272 ram_be_2048x272 ram_be_1024x272 ram_be_512x272 ram_be_256x272 ram_be_128x272 ram_be_64x272 ram_be_4096x52 ram_be_2048x52 ram_be_1024x52 ram_be_512x52 ram_be_256x52 ram_be_128x52 ram_be_64x52 ram_be_32x52 ram_be_4096x104 ram_be_2048x104 ram_be_1024x104 ram_be_512x104 ram_be_256x104 ram_be_128x104 ram_be_64x104 ram_be_32x104 ram_be_4096x44 ram_be_2048x44 ram_be_1024x44 ram_be_512x44 ram_be_256x44 ram_be_128x44 ram_be_64x44 ram_be_32x44 ram_be_4096x88 ram_be_2048x88 ram_be_1024x88 ram_be_512x88 ram_be_256x88 ram_be_128x88 ram_be_64x88 ram_be_32x88 ram_64x39 el2_veer_lockstep tb_soc_uvm_top 
+OPTION=-ssv -ssy 
+ELAB_OPTION=-ssv -ssy 
+ELAB=TRUE
+SIMV_WRAPPER=FALSE
+[vcs]
+RUN_ELABCOM=unset TURBO_LOG_DIR ;\rm -rf /home/student/Downloads/Honours project/Project/SOC_UVM/sim/simv_soc_uvm.daidir/elabcomLog ;/home/student/snps_tools_target/vcs/U-2023.03/linux64/bin/elabcom -logdir /home/student/Downloads/Honours project/Project/SOC_UVM/sim/simv_soc_uvm.daidir/elabcomLog  -simvdaidir /home/student/Downloads/Honours project/Project/SOC_UVM/sim/simv_soc_uvm.daidir  -lib /home/student/Downloads/Honours project/Project/SOC_UVM/sim/simv_soc_uvm.daidir/work  -saveLevel  -elab /home/student/Downloads/Honours project/Project/SOC_UVM/sim/simv_soc_uvm.daidir/kdb -simflow -simdir /home/student/Downloads/Honours project/Project/SOC_UVM/sim/simv_soc_uvm.daidir/kdb_libs -topfile /home/student/Downloads/Honours project/Project/SOC_UVM/sim/simv_soc_uvm.daidir/.elabcomTopFile -pkgfile /home/student/Downloads/Honours project/Project/SOC_UVM/sim/simv_soc_uvm.daidir/.elabcomPkgFile -ssv -ssy  -Lf work +disable_message+C00380+C00381 +disable_message+C00388+C00389  >& /dev/null  && echo Success >& /home/student/Downloads/Honours project/Project/SOC_UVM/sim/simv_soc_uvm.daidir/.elabcomReport || echo Fail >& /home/student/Downloads/Honours project/Project/SOC_UVM/sim/simv_soc_uvm.daidir/.elabcomReport; \rm -rf /home/student/Downloads/Honours project/Project/SOC_UVM/sim/simv_soc_uvm.daidir/work.lib++ /home/student/Downloads/Honours project/Project/SOC_UVM/sim/simv_soc_uvm.daidir/kdb_libs/ 
+
+[Value]
+WREALX=ffff534e50535f58
+WREALZ=ffff534e50535f5a
+
+[CompInfo]
+FLOW_OPTS=-kdb -ssv -ssy 

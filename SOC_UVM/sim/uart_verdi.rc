@@ -1,0 +1,88 @@
+Magic 271485
+Revision Verdi_U-2023.03-SP1
+
+; Window Layout <x> <y> <width> <height> <signalwidth> <valuewidth>
+viewPort 0 25 1920 1000 350 200
+
+signalSpacing 5
+
+; ----------------------------------------------------------------------
+; Group 1: System Clocks & Reset
+; ----------------------------------------------------------------------
+addGroup "1. System Clocks & Reset"
+addSignal -h 15 /tb_soc_uvm_top/clk
+addSignal -h 15 -holdScope rst_n
+
+; ----------------------------------------------------------------------
+; Group 2: DUT UART TX (Requested by User)
+; ----------------------------------------------------------------------
+addGroup "2. DUT UART TX"
+addSignal -h 15 -color ID_YELLOW5 /tb_soc_uvm_top/soc_dut/uart_tx
+addSignal -h 15 -color ID_YELLOW5 /tb_soc_uvm_top/soc_dut/u_uart/uart_tx
+addSignal -h 15 -color ID_YELLOW5 /tb_soc_uvm_top/soc_dut/u_uart/u_axi_uart_top/uart_tx
+addSignal -h 15 -UNSIGNED -HEX /tb_soc_uvm_top/soc_dut/u_uart/u_axi_uart_top/u_tx_fifo/data_in[7:0]
+addSignal -h 15 /tb_soc_uvm_top/soc_dut/u_uart/u_axi_uart_top/u_tx_fifo/push_i
+addSignal -h 15 /tb_soc_uvm_top/soc_dut/u_uart/u_axi_uart_top/u_tx_fifo/pull_i
+addSignal -h 15 -UNSIGNED -HEX /tb_soc_uvm_top/soc_dut/u_uart/u_axi_uart_top/u_tx_fifo/data_out[7:0]
+addSignal -h 15 /tb_soc_uvm_top/soc_dut/u_uart/u_axi_uart_top/u_uart_controller/uart_transmitter_inst/tx_ready_o
+addSignal -h 15 /tb_soc_uvm_top/soc_dut/u_uart/u_axi_uart_top/u_uart_controller/uart_transmitter_inst/busy_o
+addSignal -h 15 /tb_soc_uvm_top/soc_dut/u_uart/u_axi_uart_top/u_uart_controller/uart_transmitter_inst/tx_o
+
+; ----------------------------------------------------------------------
+; Group 3: UVM VIP UART TX (Requested by User)
+; ----------------------------------------------------------------------
+addGroup "3. UVM VIP UART TX"
+addSignal -h 15 -color ID_ORANGE5 /tb_soc_uvm_top/u_uart_if/uart_tx
+addSignal -h 15 -color ID_ORANGE5 /tb_soc_uvm_top/uart_tx
+
+; ----------------------------------------------------------------------
+; Group 4: INTERFACE UART TX (Requested by User)
+; ----------------------------------------------------------------------
+addGroup "4. INTERFACE UART TX"
+addSignal -h 15 -color ID_CYAN5 /tb_soc_uvm_top/u_uart_if/uart_tx
+addSignal -h 15 /tb_soc_uvm_top/u_uart_if/irq_uart
+
+; ----------------------------------------------------------------------
+; Group 5: UART RX Serial Path (Driver -> Interface -> DUT)
+; ----------------------------------------------------------------------
+addGroup "5. UART RX Serial Path (VIP Driver -> Interface -> DUT RX)"
+addSignal -h 15 -color ID_GREEN5 /tb_soc_uvm_top/u_uart_if/uart_rx
+addSignal -h 15 -color ID_GREEN5 /tb_soc_uvm_top/uart_rx
+addSignal -h 15 -color ID_GREEN5 /tb_soc_uvm_top/soc_dut/uart_rx
+addSignal -h 15 -color ID_GREEN5 /tb_soc_uvm_top/soc_dut/u_uart/u_axi_uart_top/uart_rx
+
+; ----------------------------------------------------------------------
+; Group 6: DUT Hardware RX Reception Evidence (8'hA5 in FIFO)
+; ----------------------------------------------------------------------
+addGroup "6. DUT Hardware RX Reception Evidence (8'hA5)"
+addSignal -h 15 /tb_soc_uvm_top/u_uart_if/rx_fifo_push
+addSignal -h 15 -UNSIGNED -HEX /tb_soc_uvm_top/u_uart_if/rx_fifo_din[7:0]
+addSignal -h 15 /tb_soc_uvm_top/u_uart_if/rx_valid
+addSignal -h 15 -UNSIGNED -HEX /tb_soc_uvm_top/u_uart_if/rx_data[7:0]
+addSignal -h 15 -UNSIGNED -HEX /tb_soc_uvm_top/soc_dut/u_uart/u_axi_uart_top/u_rx_fifo/data_o[7:0]
+addSignal -h 15 -UNSIGNED -UDEC /tb_soc_uvm_top/u_uart_if/baud_divisor[15:0]
+
+; ----------------------------------------------------------------------
+; Group 7: Interrupts & Execution Status
+; ----------------------------------------------------------------------
+addGroup "7. Interrupts & PIC Status"
+addSignal -h 15 /tb_soc_uvm_top/soc_dut/irq_uart
+addSignal -h 15 -UNSIGNED -BIN /tb_soc_uvm_top/soc_dut/pic_interrupts[5:0]
+addSignal -h 15 /tb_soc_uvm_top/soc_dut/irq_core
+
+; ----------------------------------------------------------------------
+; Group 8: GET and SET Signals (FIFO Push/Pull & AXI Handshakes)
+; ----------------------------------------------------------------------
+addGroup "8. GET and SET Handshake Signals"
+addSignal -h 15 -comment "SET: Push Byte into TX FIFO" /tb_soc_uvm_top/soc_dut/u_uart/u_axi_uart_top/u_tx_fifo/push_i
+addSignal -h 15 -UNSIGNED -HEX -comment "SET: Data pushed into TX FIFO" /tb_soc_uvm_top/soc_dut/u_uart/u_axi_uart_top/u_tx_fifo/data_in[7:0]
+addSignal -h 15 -comment "GET: Pull Byte from TX FIFO by Serializer" /tb_soc_uvm_top/soc_dut/u_uart/u_axi_uart_top/u_tx_fifo/pull_i
+addSignal -h 15 -UNSIGNED -HEX -comment "GET: Data pulled from TX FIFO" /tb_soc_uvm_top/soc_dut/u_uart/u_axi_uart_top/u_tx_fifo/data_out[7:0]
+addSignal -h 15 -comment "SET: Push Byte into RX FIFO by Deserializer" /tb_soc_uvm_top/u_uart_if/rx_fifo_push
+addSignal -h 15 -UNSIGNED -HEX -comment "SET: Data pushed into RX FIFO" /tb_soc_uvm_top/u_uart_if/rx_fifo_din[7:0]
+addSignal -h 15 -comment "GET: Valid received byte in RX FIFO" /tb_soc_uvm_top/u_uart_if/rx_valid
+addSignal -h 15 -UNSIGNED -HEX -comment "GET: Read received byte from RX FIFO" /tb_soc_uvm_top/u_uart_if/rx_data[7:0]
+addSignal -h 15 -UNSIGNED -HEX -comment "SET: AXI Write Address" /tb_soc_uvm_top/u_uart_if/s_axil_awaddr[31:0]
+addSignal -h 15 -UNSIGNED -HEX -comment "SET: AXI Write Data" /tb_soc_uvm_top/u_uart_if/s_axil_wdata[31:0]
+addSignal -h 15 -comment "SET: AXI Write Valid" /tb_soc_uvm_top/u_uart_if/s_axil_wvalid
+addSignal -h 15 -comment "SET: AXI Write Ready" /tb_soc_uvm_top/u_uart_if/s_axil_wready

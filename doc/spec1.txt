@@ -1,0 +1,2288 @@
+Design and RTL Implementation of a RISC-V Based SoC with a
+Hardware Arithmetic Accelerator
+Detailed Project Specification
+This document follows the same structure and level of detail as the reference honoursproject specification you shared (block diagram → full signal lists → memory-mapped
+register access → control path → data path → design requirements), applied to your project: a
+VeeR EL2 RISC-V SoC with a hardware Arithmetic Accelerator, DMA Controller, and SPI
+Controller.
+The reference document confirms the course's underlying bus architecture is AHB-Lite at
+the processor core, bridged to APB for peripheral register access, built around the VeeR
+EL2 RISC-V core. This specification adopts that same real architecture (replacing the
+generic custom bus assumed in the earlier draft) so it is consistent with what your provided
+core and tooling actually expect.
+
+INTRODUCTION
+Problem Statement
+Arithmetic-intensive applications often require repeated multiplication, division, and
+multiply-accumulate operations, which increase processor workload and execution time
+when performed entirely in software. This project proposes a RISC-V based SoC with a
+dedicated hardware Arithmetic Accelerator, where the VeeR EL2 processor handles
+system-level configuration and result reporting, while the repetitive, high-throughput
+arithmetic work is offloaded to dedicated RTL hardware, off the processor's critical path.
+Proposed System Aims
+Accept operand data staged in Data Memory by software.
+Autonomously move operand blocks into the accelerator and results back, using a
+DMA Controller, without occupying the processor one word at a time.
+Execute ADD, SUB, MUL, DIV, and MAC operations on a pipelined hardware datapath.
+Reduce processor workload by keeping the RISC-V core limited to configuration, job
+dispatch, and result handling.
+Report job status, results, and error flags to an external host over UART.
+Expose accelerator configuration and results to an external host/test bench over SPI,
+independent of the processor's own instruction stream.
+
+PROPOSED SoC ARCHITECTURE
+The VeeR EL2 RISC-V processor acts as the central controller and communicates with
+memories and peripherals through an AHB-Lite interconnect, bridged to APB for all
+memory-mapped peripheral register access. The architecture follows a hardware-software
+
+co-design approach: the processor performs configuration, job dispatch, and result
+interpretation, while the high-volume operand movement and the arithmetic computation
+itself run entirely in dedicated hardware.
+The compute path consists of Data Memory → DMA Controller → Arithmetic Accelerator
+→ DMA Controller → Data Memory. The DMA Controller autonomously streams operand
+blocks from Data Memory into the accelerator's pipelined datapath and streams computed
+results back once the accelerator asserts completion. The processor is only involved before
+the job starts (configuration) and after it ends (result read-out, logging, status update) —
+never during the transfer or computation itself.
+The SoC consists of the following components:
+VeeR EL2 RISC-V Processor — central controller; configures and controls the
+Accelerator, DMA Controller, and other peripherals; dispatches jobs; interprets results.
+Instruction Memory — stores the firmware that configures and controls the system.
+Data Memory — stores operand blocks (staged by software) and result blocks
+(written by the DMA Controller); accessible to the processor over AHB-Lite and to the
+DMA Controller over a dedicated data port (see §Data Path Architecture — Design
+Decision D1).
+AHB-Lite Interconnect — connects the processor core to Instruction Memory, Data
+Memory, and the AHB-to-APB bridge.
+AHB-to-APB Bridge / APB Decoder — converts AHB-Lite register accesses into APB
+transactions for all peripheral register banks.
+Arithmetic Accelerator — the primary custom IP; performs ADD, SUB, MUL, DIV,
+and MAC on a pipelined datapath.
+DMA Controller — autonomously transfers operand blocks into the Accelerator and
+result blocks back to Data Memory.
+SPI Controller — exposes Accelerator configuration/result registers to an external
+host, independent of the processor's own bus transactions.
+UART — transmits job status, results, and error flags to an external host.
+Timer — timestamps job start/completion; can trigger periodic accelerator jobs.
+GPIO — drives status/error indicator lines and captures manual trigger/reset input.
+Interrupt Controller (VeeR PIC) — aggregates interrupts from Accelerator, DMA, SPI,
+UART, Timer, and GPIO to the processor core.
+Selected IPs
+1. Arithmetic Accelerator — memory-mapped datapath implementing ADD, SUB,
+MUL, DIV, MAC with a pipelined multiply/MAC stage; the primary custom IP.
+2. DMA Controller — memory-mapped engine that autonomously transfers operand
+blocks from Data Memory into the Accelerator and streams results back, so the
+processor is not occupied moving data one word at a time.
+
+3. SPI Controller — memory-mapped peripheral (SCLK generation, MOSI/MISO shift
+register, chip-select control) exposing Accelerator configuration/result registers for
+external access.
+Process Flow
+
+
+
+Software stages operands in Data Memory → RISC-V configures Accelerator + DMA
+over
+APB → DMA reads operand block from Data Memory → DMA streams operands into
+Accelerator → Accelerator computes (pipelined) → Accelerator streams results
+to DMA →
+DMA writes result block to Data Memory → Accelerator interrupt → RISC-V reads
+status/results
+→ RISC-V reports over UART and updates GPIO → (independently) External host
+issues jobs and
+reads results via SPI
+
+BLOCK DIAGRAM
+clk
+
+rst_l
+
+RISC-V SoC
+VeeR EL2 RISC-V Processor
+
+Instruction Fetch AHB-Lite
+
+LSU AHB-Lite
+
+Instruction Memory
+0x0000_0000
+
+AHB-Lite Interconnect
+
+AHB-to-APB Bridge /
+Decoder
+
+APB Bus
+
+DMA Controller
+0x4000_4000
+Dedicated operand/result
+streaming interface
+Dedicated DMA data port
+(D1)
+Data Memory
+0x1000_0000
+
+SPI Interface (External)
+spi_sclk, spi_mosi, spi_miso,
+spi_cs_n
+
+Arithmetic Accelerator
+0x4000_3000
+
+SPI Controller
+0x4000_5000
+
+UART
+0x4000_0000
+
+Interrupt Controller (PIC)
+
+Timer
+0x4000_1000
+
+GPIO
+0x4000_2000
+
+UART Interface (External)
+uart_tx, uart_rx
+
+GPIO Pins (External)
+gpio_in[N-1:0],
+gpio_out[N-1:0]
+
+Design Decision D1 (flagged, same as the reference project's treatment of FFT→Data
+Memory): the DMA Controller's high-volume operand/result transfer should not be forced
+onto the shared AHB-Lite bus as a second bus master, since that adds arbitration
+complexity the course template avoids elsewhere. Instead, Data Memory exposes a second,
+dedicated data port used only by the DMA Controller for burst operand reads and result
+writes, while the processor continues to access Data Memory normally over AHB-Lite for
+anything software needs to touch directly. This mirrors exactly how the reference project
+deferred and separated its FFT-to-Data-Memory connection from the LSU AHB-Lite table.
+Confirm this decision before RTL begins — the alternative is a true second AHB-Lite
+master with round-robin arbitration, which is more faithful to a "real" SoC bus but adds
+verification surface area for comparatively little benefit at this project's scope.
+
+SIGNAL LIST
+1. VeeR EL2 RISC-V Processor — Signal List
+VeeR EL2 provides separate AHB-Lite interfaces for instruction fetch and load/store/data
+access, per the VeeR EL2 Programmer's Reference Manual (PRM): a 32-bit address bus and
+64-bit data bus on both interfaces.
+A. Instruction Fetch AHB-Lite Interface
+Signal
+
+Direction Source →
+Destination
+
+Width Description
+
+haddr[31:0]
+
+Output
+
+VeeR → AHB Bus
+
+32
+
+Instruction memory address
+
+hburst[2:0]
+
+Output
+
+VeeR → AHB Bus
+
+3
+
+Burst type; hardwired to 000
+
+hmastlock
+
+Output
+
+VeeR → AHB Bus
+
+1
+
+Locked-transfer indication;
+hardwired to 0
+
+hprot[3:0]
+
+Output
+
+VeeR → AHB Bus
+
+4
+
+Transfer protection attributes
+
+hsize[2:0]
+
+Output
+
+VeeR → AHB Bus
+
+3
+
+Instruction transfer size
+
+htrans[1:0]
+
+Output
+
+VeeR → AHB Bus
+
+2
+
+AHB transfer type
+
+hwrite
+
+Output
+
+VeeR → AHB Bus
+
+1
+
+Read/write; instruction fetch is
+always read
+
+hrdata[63:0]
+
+Input
+
+AHB Bus → VeeR
+
+64
+
+Instruction data returned from
+memory
+
+hready
+
+Input
+
+AHB Bus → VeeR
+
+1
+
+Indicates completion of the transfer
+
+hresp
+
+Input
+
+AHB Bus → VeeR
+
+1
+
+AHB transfer response/error
+
+B. Load/Store Unit (LSU) AHB-Lite Interface
+
+Signal
+
+Direction Source →
+Destination
+
+Width Description
+
+lsu_haddr[31:0]
+
+Output
+
+VeeR → AHB Bus
+
+32
+
+Address for data/peripheral
+access
+
+lsu_hburst[2:0]
+
+Output
+
+VeeR → AHB Bus
+
+3
+
+Burst type; hardwired to 000
+
+lsu_hmastlock
+
+Output
+
+VeeR → AHB Bus
+
+1
+
+Locked-transfer indication;
+hardwired to 0
+
+lsu_hprot[3:0]
+
+Output
+
+VeeR → AHB Bus
+
+4
+
+Transfer protection attributes
+
+lsu_hsize[2:0]
+
+Output
+
+VeeR → AHB Bus
+
+3
+
+Data transfer size
+
+lsu_htrans[1:0]
+
+Output
+
+VeeR → AHB Bus
+
+2
+
+AHB transfer type
+
+lsu_hwdata[63:0]
+
+Output
+
+VeeR → AHB Bus
+
+64
+
+Data written to
+memory/peripherals
+
+lsu_hwrite
+
+Output
+
+VeeR → AHB Bus
+
+1
+
+Read (0) or write (1)
+
+lsu_hrdata[63:0]
+
+Input
+
+AHB Bus → VeeR
+
+64
+
+Data returned from
+memory/peripheral
+
+lsu_hready
+
+Input
+
+AHB Bus → VeeR
+
+1
+
+Indicates completion of the
+transfer
+
+lsu_hresp
+
+Input
+
+AHB Bus → VeeR
+
+1
+
+AHB transfer response/error
+
+C. Clock, Reset, and Interrupt
+Signal
+
+Direction Source →
+Destination
+
+Width Description
+
+clk
+
+Input
+
+SoC clock → VeeR
+
+1
+
+System clock
+
+rst_l
+
+Input
+
+SoC reset → VeeR
+
+1
+
+Active-low core-complex
+reset
+
+External interrupt
+input(s)
+
+Input
+
+PIC → VeeR
+
+N*
+
+Interrupt signal(s) from the
+PIC
+
+*VeeR EL2 supports a configurable PIC with 2–255 external interrupt sources. This project
+uses 6 sources (Accelerator, DMA, SPI, UART, Timer, GPIO) — finalize the exact PIC
+instantiation width when interrupt RTL is written.
+
+2. Instruction Memory — Signal List
+64 KB read-only program memory, mapped 0x0000_0000 – 0x0000_FFFF . Accessed only
+by the VeeR instruction-fetch AHB-Lite interface; no separate write port is needed for
+normal operation.
+Signal
+
+Direction Source → Destination
+
+Width Description
+
+haddr[31:0]
+
+Input
+
+VeeR → Instruction
+Memory
+
+32
+
+Address of instruction being
+fetched
+
+htrans[1:0]
+
+Input
+
+VeeR → Instruction
+Memory
+
+2
+
+AHB transfer type/state
+
+hsize[2:0]
+
+Input
+
+VeeR → Instruction
+Memory
+
+3
+
+Transfer size
+
+hwrite
+
+Input
+
+VeeR → Instruction
+Memory
+
+1
+
+Always read for instruction
+fetch
+
+hburst[2:0]
+
+Input
+
+VeeR → Instruction
+Memory
+
+3
+
+Hardwired 000
+
+hmastlock
+
+Input
+
+VeeR → Instruction
+Memory
+
+1
+
+Hardwired 0
+
+hprot[3:0]
+
+Input
+
+VeeR → Instruction
+Memory
+
+4
+
+Protection attributes
+
+hrdata[63:0]
+
+Output
+
+Instruction Memory →
+VeeR
+
+64
+
+Fetched instruction data
+
+hready
+
+Output
+
+Instruction Memory →
+VeeR
+
+1
+
+Fetch complete
+
+hresp
+
+Output
+
+Instruction Memory →
+VeeR
+
+1
+
+Success/error
+
+clk
+
+Input
+
+SoC → Instruction
+Memory
+
+1
+
+System clock
+
+reset
+
+Input
+
+SoC → Instruction
+Memory
+
+1
+
+Initializes memory control logic
+
+Note: 64-bit hrdata reflects the AHB-Lite data-channel width, not RV32 instruction width
+— the core extracts the required 32-bit instruction(s) from the fetched 64-bit word.
+
+3. Data Memory — Signal List
+64 KB, mapped 0x1000_0000 – 0x1000_FFFF . Used to stage operand blocks and store
+result blocks for accelerator jobs.
+A. AHB-Lite Interface (processor access)
+Signal
+
+Direction Source → Destination
+
+Width Description
+
+lsu_haddr[31:0]
+
+Input
+
+VeeR/AHB → Data
+Memory
+
+32
+
+Address of the data-memory
+access
+
+lsu_htrans[1:0]
+
+Input
+
+VeeR/AHB → Data
+Memory
+
+2
+
+AHB transfer type
+
+lsu_hsize[2:0]
+
+Input
+
+VeeR/AHB → Data
+Memory
+
+3
+
+Transfer size
+
+lsu_hwrite
+
+Input
+
+VeeR/AHB → Data
+Memory
+
+1
+
+Read (0) / write (1)
+
+lsu_hburst[2:0]
+
+Input
+
+VeeR/AHB → Data
+Memory
+
+3
+
+Burst type
+
+lsu_hmastlock
+
+Input
+
+VeeR/AHB → Data
+Memory
+
+1
+
+Locked-transfer indication
+
+lsu_hprot[3:0]
+
+Input
+
+VeeR/AHB → Data
+Memory
+
+4
+
+Protection attributes
+
+lsu_hwdata[63:0]
+
+Input
+
+VeeR/AHB → Data
+Memory
+
+64
+
+Write data
+
+lsu_hrdata[63:0]
+
+Output
+
+Data Memory →
+VeeR/AHB
+
+64
+
+Read data
+
+lsu_hready
+
+Output
+
+Data Memory →
+VeeR/AHB
+
+1
+
+Transfer complete
+
+lsu_hresp
+
+Output
+
+Data Memory →
+VeeR/AHB
+
+1
+
+Success/error
+
+B. Dedicated DMA Data Port (per Design Decision D1)
+
+Signal
+
+Direction Source → Destination
+
+Width Description
+
+dma_addr[31:0]
+
+Input
+
+DMA Controller → Data
+Memory
+
+32
+
+DMA transfer address
+
+dma_wdata[31:0]
+
+Input
+
+DMA Controller → Data
+Memory
+
+32
+
+Result data being written
+back
+
+dma_write
+
+Input
+
+DMA Controller → Data
+Memory
+
+1
+
+Read (0, operand load) / write
+(1, result store)
+
+dma_valid
+
+Input
+
+DMA Controller → Data
+Memory
+
+1
+
+DMA transfer request valid
+
+dma_rdata[31:0]
+
+Output
+
+Data Memory → DMA
+Controller
+
+32
+
+Operand data read out
+
+dma_ready
+
+Output
+
+Data Memory → DMA
+Controller
+
+1
+
+Transfer complete
+
+C. Clock and Reset
+Signal
+
+Direction
+
+Source → Destination
+
+Width
+
+Description
+
+clk
+
+Input
+
+SoC → Data Memory
+
+1
+
+System clock
+
+reset
+
+Input
+
+SoC → Data Memory
+
+1
+
+Initializes memory control logic
+
+This keeps the DSP/compute data path (DMA ↔ Data Memory, port B) separate from the
+control-visible path (VeeR LSU ↔ Data Memory, port A) — exactly the distinction the
+reference project draws between its DSP data path and its LSU AHB-Lite table.
+4. AHB-Lite Interconnect — Signal List
+Routes the VeeR LSU AHB-Lite transaction to either Data Memory or the AHB-to-APB
+Bridge, based on address decode.
+
+Signal
+
+Direction Source →
+Destination
+
+Width
+
+Description
+
+lsu_haddr[31:0] ,
+lsu_htrans , lsu_hsize ,
+lsu_hwrite , lsu_hwdata ,
+lsu_hburst , lsu_hmastlock ,
+lsu_hprot
+
+Input
+
+VeeR →
+Interconnect
+
+as
+above
+
+Passed through from
+the VeeR LSU
+interface
+
+hsel_dmem
+
+Output
+
+Interconnect →
+Data Memory
+
+1
+
+Asserted when
+address falls in
+0x1000_0000–
+0x1000_FFFF
+
+hsel_apb
+
+Output
+
+Interconnect →
+AHB-to-APB
+Bridge
+
+1
+
+Asserted when
+address falls in
+0x4000_0000–
+0x4000_5FFF
+
+lsu_hrdata[63:0] ,
+lsu_hready , lsu_hresp
+
+Output
+
+Interconnect →
+VeeR
+
+as
+above
+
+Multiplexed response
+from the selected
+slave
+
+5. AHB-to-APB Bridge — Signal List
+A. AHB-Side Interface
+
+Signal
+
+Direction Source → Destination
+
+Width Description
+
+haddr[31:0]
+
+Input
+
+AHB Interconnect →
+Bridge
+
+32
+
+Peripheral register address
+
+hwdata[63:0]
+
+Input
+
+AHB Interconnect →
+Bridge
+
+64
+
+Write data (64-bit AHB side)
+
+hwrite
+
+Input
+
+AHB Interconnect →
+Bridge
+
+1
+
+Read/write
+
+htrans[1:0]
+
+Input
+
+AHB Interconnect →
+Bridge
+
+2
+
+Transfer type
+
+hrdata[63:0]
+
+Output
+
+Bridge → AHB
+Interconnect
+
+64
+
+Read data (width-extended from
+32-bit APB)
+
+hready
+
+Output
+
+Bridge → AHB
+Interconnect
+
+1
+
+Transfer complete
+
+hresp
+
+Output
+
+Bridge → AHB
+Interconnect
+
+1
+
+Success/error
+
+B. APB-Side Interface
+Signal
+
+Direction Source →
+Destination
+
+Width Description
+
+PADDR[31:0]
+
+Output
+
+Bridge → APB
+Decoder
+
+32
+
+Address of selected peripheral
+register
+
+PWDATA[31:0]
+
+Output
+
+Bridge → APB
+Decoder
+
+32
+
+Write data
+
+PWRITE
+
+Output
+
+Bridge → APB
+Decoder
+
+1
+
+Read (0) / write (1)
+
+PENABLE
+
+Output
+
+Bridge → APB
+Decoder
+
+1
+
+Indicates APB ACCESS phase
+
+PRDATA[31:0]
+
+Input
+
+APB Decoder →
+Bridge
+
+32
+
+Read data
+
+PSLVERR
+
+Input
+
+APB Decoder →
+Bridge
+
+1
+
+APB transfer error
+
+Important width point: the AHB side is 64-bit (matching VeeR's LSU data width); APB is
+32-bit. The bridge performs the required width conversion. AHB burst/lock signals are
+present only on the AHB side — peripheral accesses are treated as individual APB transfers,
+never APB bursts.
+6. APB Bus / Decoder ↔ Peripherals — Signal List
+Common APB signals are defined once; each peripheral additionally gets its own PSEL line.
+A. Common APB Signals
+Signal
+
+Direction
+
+Source → Destination
+
+Width
+
+Description
+
+PADDR[31:0]
+
+Output
+
+APB Decoder → All Peripherals
+
+32
+
+Register address
+
+PWDATA[31:0]
+
+Output
+
+APB Decoder → All Peripherals
+
+32
+
+Write data
+
+PWRITE
+
+Output
+
+APB Decoder → All Peripherals
+
+1
+
+Read/write
+
+PENABLE
+
+Output
+
+APB Decoder → All Peripherals
+
+1
+
+ACCESS phase indicator
+
+PCLK
+
+Input
+
+SoC → All Peripherals
+
+1
+
+APB clock
+
+PRESETn
+
+Input
+
+SoC → All Peripherals
+
+1
+
+Active-low APB reset
+
+B. Peripheral Select Signals
+Signal
+
+Direction Source → Destination
+
+Width Description
+
+PSEL_UART
+
+Output
+
+APB Decoder → UART
+
+1
+
+Selects UART
+
+PSEL_TIMER
+
+Output
+
+APB Decoder → Timer
+
+1
+
+Selects Timer
+
+PSEL_GPIO
+
+Output
+
+APB Decoder → GPIO
+
+1
+
+Selects GPIO
+
+PSEL_ACC
+
+Output
+
+APB Decoder → Arithmetic
+Accelerator
+
+1
+
+Selects the Accelerator's
+register bank
+
+PSEL_DMA
+
+Output
+
+APB Decoder → DMA
+Controller
+
+1
+
+Selects the DMA Controller's
+register bank
+
+PSEL_SPI
+
+Output
+
+APB Decoder → SPI
+Controller
+
+1
+
+Selects the SPI Controller
+
+C. Peripheral Response Signals (per peripheral, returned to the decoder)
+
+Signal
+
+Direction
+
+Source → Destination
+
+Width
+
+Description
+
+PRDATA[31:0]
+
+Output
+
+Peripheral → APB Decoder
+
+32
+
+Read data
+
+PREADY
+
+Output
+
+Peripheral → APB Decoder
+
+1
+
+Optional wait-state extension
+
+PSLVERR
+
+Output
+
+Peripheral → APB Decoder
+
+1
+
+Register access error
+
+7. Arithmetic Accelerator — Signal List
+A. APB Slave Interface (register access)
+Signal
+
+Direction
+
+Source → Destination
+
+Width
+
+Description
+
+PSEL_ACC
+
+Input
+
+APB Decoder → Accelerator
+
+1
+
+Chip select
+
+PADDR[11:0]
+
+Input
+
+APB Decoder → Accelerator
+
+12
+
+Register offset
+
+PWDATA[31:0]
+
+Input
+
+APB Decoder → Accelerator
+
+32
+
+Write data
+
+PWRITE
+
+Input
+
+APB Decoder → Accelerator
+
+1
+
+Read/write
+
+PENABLE
+
+Input
+
+APB Decoder → Accelerator
+
+1
+
+ACCESS phase
+
+PRDATA[31:0]
+
+Output
+
+Accelerator → APB Decoder
+
+32
+
+Read data
+
+B. Dedicated Operand/Result Streaming Interface (to DMA Controller) — the red dashed
+link in the block diagram; this is a point-to-point custom interface, not APB.
+
+Signal
+
+Direction Source →
+Destination
+
+Width Description
+
+dma_op_valid
+
+Input
+
+DMA Controller →
+Accelerator
+
+1
+
+New operand pair
+presented
+
+dma_op_data_a[31:0]
+
+Input
+
+DMA Controller →
+Accelerator
+
+32
+
+Operand A
+
+dma_op_data_b[31:0]
+
+Input
+
+DMA Controller →
+Accelerator
+
+32
+
+Operand B (unused for
+single-operand ops)
+
+dma_op_ready
+
+Output
+
+Accelerator → DMA
+Controller
+
+1
+
+Accelerator can accept the
+operand
+
+dma_res_valid
+
+Output
+
+Accelerator → DMA
+Controller
+
+1
+
+Result ready to stream out
+
+dma_res_data[31:0]
+
+Output
+
+Accelerator → DMA
+Controller
+
+32
+
+Result word
+
+dma_res_ready
+
+Input
+
+DMA Controller →
+Accelerator
+
+1
+
+DMA can accept the result
+
+dma_last
+
+Input
+
+DMA Controller →
+Accelerator
+
+1
+
+Marks the final operand
+pair of the job
+
+C. Status / Interrupt
+Signal
+
+Direction
+
+Source → Destination
+
+Width
+
+Description
+
+irq_acc
+
+Output
+
+Accelerator → PIC
+
+1
+
+Job-complete / error interrupt
+
+busy
+
+Output
+
+Accelerator → (status register)
+
+1
+
+Mirrored in ACC_STATUS
+
+error
+
+Output
+
+Accelerator → (status register)
+
+1
+
+e.g. divide-by-zero
+
+Register Map (base 0x4000_3000 )
+
+Offset
+
+Name
+
+Access Description
+
+0x00
+
+ACC_CTRL
+
+R/W
+
+[2:0] opcode
+(000=ADD,001=SUB,010=MUL,011=DIV,100=MAC), [3]
+start, [4] reset
+
+0x04
+
+ACC_STATUS
+
+R
+
+[0] busy, [1] done, [2] error (div-by-zero)
+
+0x08
+
+ACC_OPCOUNT
+
+R/W
+
+[15:0] number of operand pairs in the job
+
+0x0C
+
+ACC_OPERAND_A
+
+R/W
+
+Direct single-operand test register (bypasses DMA)
+
+0x10
+
+ACC_OPERAND_B
+
+R/W
+
+Direct single-operand test register
+
+0x14
+
+ACC_RESULT
+
+R
+
+Direct result readback (last completed op)
+
+0x18
+
+ACC_ACC_REG
+
+R/W
+
+Running accumulator value (MAC)
+
+0x1C
+
+ACC_IRQ_EN
+
+R/W
+
+[0] job-complete interrupt enable
+
+8. DMA Controller — Signal List
+A. APB Slave Interface (configuration) — same shape as §7A.
+B. Dedicated Data-Memory Port — DMA side of §3B ( dma_addr , dma_wdata , dma_rdata ,
+dma_write , dma_valid , dma_ready ).
+C. Accelerator-Facing Streaming Interface — DMA side of §7B (same 8 signals, opposite
+endpoint).
+D. Interrupt
+Signal
+
+Direction Source →
+Destination
+
+Width Description
+
+irq_dma
+
+Output
+
+1
+
+DMA Controller →
+PIC
+
+Register Map (base 0x4000_4000 )
+
+Asserted when a full block transfer
+completes
+
+Offset
+
+Name
+
+Access Description
+
+0x00
+
+DMA_SRC_ADDR
+
+R/W
+
+Source address (operand block in Data Memory)
+
+0x04
+
+DMA_DST_ADDR
+
+R/W
+
+Destination address (result block in Data Memory)
+
+0x08
+
+DMA_LENGTH
+
+R/W
+
+Transfer length in words
+
+0x0C
+
+DMA_CTRL
+
+R/W
+
+[0] start, [1] mode (0=operand-load,1=result-store), [2]
+irq_en
+
+0x10
+
+DMA_STATUS
+
+R
+
+[0] busy, [1] done, [2] error
+
+9. SPI Controller — Signal List
+A. External Pins
+Signal
+
+Direction
+
+Width
+
+Description
+
+spi_sclk
+
+Output (master mode)
+
+1
+
+Serial clock
+
+spi_mosi
+
+Output
+
+1
+
+Master-out-slave-in
+
+spi_miso
+
+Input
+
+1
+
+Master-in-slave-out
+
+spi_cs_n
+
+Output
+
+1
+
+Active-low chip select
+
+B. APB Slave Interface — same shape as §7A.
+Register Map (base 0x4000_5000 )
+Offset
+
+Name
+
+Access Description
+
+0x00
+
+SPI_CTRL
+
+R/W
+
+[0] enable, [1] mode, [3:2] clk-div select
+
+0x04
+
+SPI_STATUS
+
+R
+
+[0] tx_busy, [1] rx_valid
+
+0x08
+
+SPI_TXDATA
+
+W
+
+Byte/word to shift out
+
+0x0C
+
+SPI_RXDATA
+
+R
+
+Last received byte/word
+
+0x10
+
+SPI_ACC_ADDR
+
+R/W
+
+Address (in Accelerator register space) an external host wants
+to relay to via SPI
+
+Per the abstract, SPI exposes accelerator configuration/result registers to an external host.
+Implementation choice to confirm: a simple register bridge (SPI frame = {addr, r/w, data}
+
+which the SPI Controller relays as its own APB access), vs. a shadow register set the CPU
+also polls — the bridge approach needs the SPI Controller to become an APB master, adding
+a second APB master to arbitrate; the shadow-register approach avoids that at the cost of
+the CPU having to periodically service external SPI requests.
+10. UART — Signal List
+Signal
+
+Direction
+
+Width
+
+Description
+
+uart_tx
+
+Output
+
+1
+
+Serial transmit
+
+uart_rx
+
+Input
+
+1
+
+Serial receive
+
+APB slave interface
+
+—
+
+—
+
+same shape as §7A
+
+Register Map (base 0x4000_0000 )
+Offset
+
+Name
+
+Access
+
+Description
+
+0x00
+
+UART_CTRL
+
+R/W
+
+[0] enable, [15:4] baud divisor
+
+0x04
+
+UART_STATUS
+
+R
+
+[0] tx_ready, [1] rx_valid
+
+0x08
+
+UART_TXDATA
+
+W
+
+Byte to transmit
+
+0x0C
+
+UART_RXDATA
+
+R
+
+Received byte
+
+11. Timer — Signal List
+Signal
+
+Direction
+
+Width
+
+Description
+
+APB slave interface
+
+—
+
+—
+
+same shape as §7A
+
+irq_timer
+
+Output
+
+1
+
+Compare-match / periodic interrupt to PIC
+
+Register Map (base 0x4000_1000 )
+Offset
+
+Name
+
+Access
+
+Description
+
+0x00
+
+TIMER_CTRL
+
+R/W
+
+[0] enable, [1] periodic mode, [2] irq_en
+
+0x04
+
+TIMER_COUNT
+
+R
+
+Free-running counter value
+
+0x08
+
+TIMER_COMPARE
+
+R/W
+
+Compare/reload value
+
+12. GPIO — Signal List
+Signal
+
+Direction
+
+Width
+
+Description
+
+gpio_in[N-1:0]
+
+Input
+
+N
+
+External input pins
+
+gpio_out[N-1:0]
+
+Output
+
+N
+
+External output pins
+
+APB slave interface
+
+—
+
+—
+
+same shape as §7A
+
+gpio_irq
+
+Output
+
+1
+
+Edge-detected interrupt from enabled input pins → PIC
+
+Register Map (base 0x4000_2000 )
+Offset
+
+Name
+
+Access
+
+Description
+
+0x00
+
+GPIO_DIR
+
+R/W
+
+Direction/output-enable control, if pins are shared
+
+0x04
+
+GPIO_OUT
+
+R/W
+
+Drives gpio_out
+
+0x08
+
+GPIO_IN
+
+R
+
+Reads gpio_in
+
+0x0C
+
+GPIO_INT_EN
+
+R/W
+
+Per-bit interrupt enable on gpio_in edges
+
+0x10
+
+GPIO_INT_STATUS
+
+R/W1C
+
+Latched edge flags, write-1-to-clear
+
+13. Interrupt Controller (VeeR PIC) — Signal List
+Signal
+
+Direction
+
+Width
+
+Description
+
+irq_acc
+
+Input
+
+1
+
+From Arithmetic Accelerator
+
+irq_dma
+
+Input
+
+1
+
+From DMA Controller
+
+irq_spi
+
+Input
+
+1
+
+From SPI Controller
+
+irq_uart
+
+Input
+
+1
+
+From UART
+
+irq_timer
+
+Input
+
+1
+
+From Timer
+
+gpio_irq
+
+Input
+
+1
+
+From GPIO
+
+External interrupt output(s) → VeeR
+
+Output
+
+N*
+
+Per VeeR PIC configuration
+
+*Confirm the exact number/encoding of PIC input lines against the provided VeeR EL2
+instantiation once RTL integration begins.
+
+MEMORY MAP
+Region
+
+Base Address
+
+Size
+
+Instruction Memory
+
+0x0000_0000
+
+64 KB
+
+Data Memory
+
+0x1000_0000
+
+64 KB
+
+UART
+
+0x4000_0000
+
+4 KB
+
+Timer
+
+0x4000_1000
+
+4 KB
+
+GPIO
+
+0x4000_2000
+
+4 KB
+
+Arithmetic Accelerator
+
+0x4000_3000
+
+4 KB
+
+DMA Controller
+
+0x4000_4000
+
+4 KB
+
+SPI Controller
+
+0x4000_5000
+
+4 KB
+
+CONTROL PATH
+1. Purpose
+The control path defines how the VeeR EL2 processor configures, starts, monitors, and
+controls the Accelerator, DMA Controller, and other peripherals, and how status,
+completion, and error information is returned to it. The control path is separate from the
+compute data path: the control path carries configuration, commands, and status; the
+compute data path carries the actual operand and result words.
+VeeR EL2 RISC-V
+│ AHB-Lite
+▼
+AHB-Lite Interconnect
+│ Peripheral address region
+▼
+AHB-to-APB Bridge
+│ APB
+▼
+APB Decoder
+│
+┌───┼────┬────┬────┬────┬────┐
+▼ ▼
+▼
+▼
+▼
+▼
+UART Timer GPIO ACC DMA SPI
+
+
+
+2. Control Path Architecture
+Read:
+Peripheral Register → PRDATA → APB Decoder → AHB-to-APB Bridge → HRDATA →
+AHB-Lite
+Interconnect → VeeR
+
+
+
+Write:
+VeeR → AHB-Lite (Address + Write Data) → AHB-to-APB Bridge → APB (SETUP →
+ACCESS) →
+Selected Peripheral Register
+
+
+
+The bridge converts each AHB-Lite transaction into the corresponding APB transaction
+and handles the 64-bit ↔ 32-bit data-width conversion.
+3. Memory-Mapped Control
+All peripheral registers are accessed via normal RISC-V load/store instructions at the
+addresses in the Memory Map above. For example, accessing 0x4000_3000 asserts
+PSEL_ACC and selects the Accelerator's register bank; the specific offset within that 4 KB
+region selects the individual register.
+4. Peripheral Register Access
+Write: RISC-V → AHB-Lite → Bridge → APB SETUP → APB ACCESS → Register updated
+Read: RISC-V → AHB-Lite → Bridge → APB SETUP → APB ACCESS → PRDATA → Bridge →
+RISC-V
+
+5. System Initialization and Control Sequence
+
+
+
+System Reset
+↓
+Firmware initializes UART, Timer, GPIO
+↓
+Firmware writes operand block to Data Memory
+↓
+Configure ACC_CTRL (opcode), ACC_OPCOUNT
+↓
+Configure DMA_SRC_ADDR, DMA_DST_ADDR, DMA_LENGTH
+↓
+Set DMA_CTRL.start
+↓
+DMA autonomously streams operands → Accelerator computes → DMA writes results
+↓
+irq_acc and/or irq_dma → PIC → RISC-V
+↓
+RISC-V reads ACC_STATUS / DMA_STATUS, ACC_RESULT
+↓
+RISC-V reports over UART, updates GPIO status
+
+6. UART Control
+Configuration: UART_CTRL (enable, baud), interrupt enable if used. Control flow: RISC-V →
+UART_CTRL/UART_TXDATA → UART configured/transmitting → UART ↔ Host PC . The
+processor polls or is interrupted by UART_STATUS to know when TX/RX is ready. UART is
+used for external reporting, not for the computation itself.
+7. Timer Control
+RISC-V → TIMER_COMPARE, TIMER_CTRL (enable) → Timer counts → compare/timeout
+event → irq_timer → PIC → RISC-V . Can be used to timestamp job duration or auto-
+
+trigger periodic accelerator jobs.
+8. GPIO Control
+
+RISC-V → GPIO_DIR → GPIO_OUT → external pins driven . On the input side: external
+event → gpio_irq (if enabled) → PIC → RISC-V . GPIO is a general status/control
+
+interface, not part of the compute data path.
+9. SPI Controller Control
+RISC-V → SPI_CTRL (enable, mode, clk-div) → SPI_TXDATA → transfer for hostinitiated firmware-side use, or (external host role) External host ↔
+spi_sclk/mosi/miso/cs_n ↔ SPI Controller ↔ [bridge or shadow registers] ↔
+
+Accelerator/DMA registers , independent of the processor's own instruction stream, per
+
+the abstract's "external access" requirement.
+10. Arithmetic Accelerator Control
+RISC-V → ACC_CTRL (opcode, opcount) → ACC_CTRL.start → Accelerator FSM: IDLE →
+CONFIG → RUN → DRAIN → DONE → irq_acc → RISC-V reads ACC_STATUS/ACC_RESULT .
+
+11. DMA Controller Control
+RISC-V → DMA_SRC_ADDR/DMA_DST_ADDR/DMA_LENGTH → DMA_CTRL.start → DMA reads
+operand block from Data Memory (dedicated port) → streams to Accelerator →
+streams results back → writes result block to Data Memory → irq_dma → RISC-V
+reads DMA_STATUS .
+
+12. Accelerator/DMA Coordination
+The Accelerator and DMA Controller coordinate directly through the dedicated streaming
+interface (§7B/§8C) without processor involvement during the transfer —
+dma_op_valid/ready governs operand flow into the Accelerator, dma_res_valid/ready
+governs result flow back out, and dma_last tells the Accelerator when the job's final
+operand pair has arrived. The processor's role is limited to arming both blocks beforehand
+and reading status afterward.
+13. Status Monitoring
+The processor can poll ACC_STATUS , DMA_STATUS , SPI_STATUS , and UART_STATUS at any
+time, or rely on interrupts (§14) for event-driven operation.
+14. Interrupt-Based Control
+Accelerator/DMA/SPI/UART/Timer/GPIO event
+↓
+irq_xxx asserted
+↓
+VeeR PIC (aggregates + prioritizes)
+↓
+External interrupt input → VeeR EL2
+↓
+Interrupt Service Routine reads INTC_PENDING, services the source, clears
+pending
+
+
+
+15. Complete Control Path
+Configuration, dispatch, and result-handling all travel: RISC-V ↔ AHB-Lite ↔ AHB-to-APB
+Bridge ↔ APB ↔ Peripheral register bank , while interrupts travel the reverse direction
+through the PIC. This is entirely separate from the compute data path described below.
+
+DATA PATH
+1. Purpose
+The compute data path carries the actual operand and result words through the system,
+separately from the control path's configuration/status traffic.
+2. Operand Path
+
+
+
+Data Memory (operand block, port B) → DMA Controller → Arithmetic Accelerator
+(pipelined ALU) → DMA Controller → Data Memory (result block, port B)
+
+Software's only involvement is writing the operand block into Data Memory before the job
+starts and reading the result block (or the direct ACC_RESULT register, for single-op tests)
+after the job completes.
+3. Data Width Progression
+Operand and result words are 32-bit throughout the datapath ( dma_op_data_a/b ,
+dma_res_data , and the direct ACC_OPERAND_A/B / ACC_RESULT registers are all 32-bit).
+Design requirement to confirm: MAC accumulation may require wider internal precision
+(e.g., a 64-bit internal accumulator with 32-bit read-back through ACC_ACC_REG ) to avoid
+overflow across a long operand sequence — this should be finalized before the ALU
+datapath is coded.
+4. Streaming vs. Stored Data
+Operand and result data is streamed between the DMA Controller and the Accelerator
+(valid/ready handshake, one word at a time, pipelined), but is stored in Data Memory at
+both ends of the transfer. The Accelerator itself holds no persistent operand/result state
+beyond what the pipeline needs to keep in flight.
+5. External Access Path via SPI
+
+
+
+External Host → spi_sclk/mosi/miso/cs_n → SPI Controller → [bridge or shadow
+registers] →
+Arithmetic Accelerator / DMA registers
+
+This path lets an external host issue a job and retrieve its result without touching the
+processor's own instruction stream, satisfying the abstract's "External access" requirement.
+6. Role of RISC-V in the Data Path
+The processor never touches operand or result data directly during a DMA-driven job — it
+only writes/reads the block boundaries in Data Memory before/after, and
+configures/monitors through the control path. This is what frees the processor from the
+high-volume data movement.
+
+7. Data Path and Control Path Interaction
+The two paths share the same physical Data Memory and the same APB register interface
+for configuration, but carry logically distinct traffic: control-path traffic is words-per-job (a
+handful of register writes), while data-path traffic is words-per-operand (potentially many
+per job). Keeping the DMA's operand/result movement off the shared AHB-Lite bus (Design
+Decision D1) is what keeps these two paths from contending for bandwidth.
+8. Data Path Design Requirements
+The DMA's dedicated Data Memory port and the Accelerator's dedicated streaming
+interface must be finalized before RTL — both are currently specification-level
+definitions, not verified interfaces.
+The Accelerator's pipeline must accept a new operand pair the cycle after the previous
+one issues, while earlier results are still draining (true streaming, not stall-peroperand).
+dma_last must be sampled correctly so the Accelerator's DRAIN state flushes
+exactly the right number of pipeline stages before asserting irq_acc .
+Divide-by-zero and any other error conditions must set ACC_STATUS.error and must
+not hang the pipeline — a following DMA transfer should be able to proceed after an
+errored job.
+MAC accumulator width/overflow behavior (see §3 above) must be decided and
+documented before the datapath is coded.
+
+OPEN ITEMS REQUIRING CONFIRMATION
+1. Design Decision D1 (§Block Diagram): dedicated DMA↔Data-Memory port vs. a true
+second AHB-Lite bus master with arbitration.
+2. SPI external-access implementation (§9): register bridge (SPI Controller as a second
+APB master) vs. shadow-register set polled by the CPU.
+3. VeeR PIC interrupt-line count/encoding actually instantiated for this SoC (2–255
+configurable sources; this spec assumes 6).
+4. MAC accumulator internal width and overflow/saturation behavior.
+5. GPIO width N (not specified in the abstract; propose 8 unless otherwise required).
+
+
